@@ -224,19 +224,20 @@ namespace IsoOnTcp
     {
         #region PInvoke 
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern int SendMessage(IntPtr hwnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        [DllImport("user32.dll",EntryPoint = "SendMessage", CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern int SendMessage(IntPtr hwnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         #endregion
 
         #region Field
 
+        internal PlcS7onlineMsgPump m_PlcS7onlineMsgPump;
 
-        public PlcS7onlineMsgPump m_PlcS7onlineMsgPump;
         private IntPtr m_PlcS7onlineMsgPump_Handle;
         private AutoResetEvent m_autoEvent_MsgPumpThreadStart;
         private AutoResetEvent m_autoEvent_ConnectPlcsim;
         private bool m_ConnectPlcsimSuccess;
+
         public int m_PlcsimRackNumber;
         public int m_PlcsimSlotNumber;
         public IPAddress m_PlcsimIpAdress;
@@ -266,7 +267,7 @@ namespace IsoOnTcp
 
         #region Public Method
 
-        public void IsoSend(ConnectionState state, byte[] data)
+        internal void IsoSend(ConnectionState state, byte[] data)
         {
             try
             {
@@ -362,7 +363,7 @@ namespace IsoOnTcp
             client = state;
         }
 
-        public bool InitPlcsim(PlcSimProtocolType plcsimVersion)
+        internal bool InitPlcsim(PlcSimProtocolType plcsimVersion)
         {
             m_autoEvent_MsgPumpThreadStart = new AutoResetEvent(false);
             StartPlcS7onlineMsgPump(plcsimVersion);
@@ -381,7 +382,7 @@ namespace IsoOnTcp
             return m_ConnectPlcsimSuccess;
         }
 
-        public void SendDataToPlcsim(PlcS7onlineMsgPump.WndProcMessage msg)
+        internal void SendDataToPlcsim(PlcS7onlineMsgPump.WndProcMessage msg)
         {
             int length = msg.pdu.Length + 4;
             byte[] buffer = new byte[length];
@@ -398,7 +399,7 @@ namespace IsoOnTcp
             Marshal.FreeHGlobal(ptr);
         }
 
-        public void StartPlcS7onlineMsgPump(PlcSimProtocolType plcsimVersion)
+        internal void StartPlcS7onlineMsgPump(PlcSimProtocolType plcsimVersion)
         {
             Thread PlcS7onlineMsgPumpThread = new Thread(StartPlcS7onlineMsgPumpThread);
             if (plcsimVersion == PlcSimProtocolType.S7commPlus)
@@ -433,11 +434,11 @@ namespace IsoOnTcp
 
         #region Event Handler
 
-        public void IsoLog(string message)
+        private void IsoLog(string message)
         {
         }
 
-        public void TCPSend(ConnectionState state, byte[] data)
+        private void TCPSend(ConnectionState state, byte[] data)
         {
             client = state;
             if (!client.Write(data, 0, data.Length))
@@ -445,7 +446,6 @@ namespace IsoOnTcp
                 client.EndConnection();
             }
         }
-
 
         private void OnDataFromPlcsimReceived(PlcS7onlineMsgPump.MessageFromPlcsim message)
         {

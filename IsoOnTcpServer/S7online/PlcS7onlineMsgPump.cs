@@ -62,15 +62,15 @@ namespace IsoOnTcp.PlcsimS7online
 
         #region Event 
 
-        public delegate void OnDataFromPlcsimReceived(MessageFromPlcsim message);
+        internal delegate void OnDataFromPlcsimReceived(MessageFromPlcsim message);
 
-        public event OnDataFromPlcsimReceived OnPlcSimDataReceived;
+        internal event OnDataFromPlcsimReceived OnPlcSimDataReceived;
 
         #endregion
 
         #region Constructor
 
-        public PlcS7onlineMsgPump(IPAddress plc_ipaddress, int rack, int slot)
+        internal PlcS7onlineMsgPump(IPAddress plc_ipaddress, int rack, int slot)
         {
             m_PlcIPAddress = plc_ipaddress;
             m_PlcRack = rack;
@@ -327,14 +327,14 @@ namespace IsoOnTcp.PlcsimS7online
 
         #region Public Method
 
-        public void Run()
+        internal void Run()
         {
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
             Application.Run();
         }
 
-        public List<string> ListReachablePartners()
+        internal List<string> ListReachablePartners()
         {
             List<string> reachablePartners = new List<string>();
 

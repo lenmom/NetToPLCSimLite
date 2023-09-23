@@ -30,7 +30,7 @@ namespace IsoOnTcp.PlcsimS7online
 
         #region Constructor
 
-        public PlcS7onlineMsgPumpS7(IPAddress plc_ipaddress, int rack, int slot)
+        internal PlcS7onlineMsgPumpS7(IPAddress plc_ipaddress, int rack, int slot)
             : base(plc_ipaddress, rack, slot)
         {
             m_opcode6_response1_was_received = false;

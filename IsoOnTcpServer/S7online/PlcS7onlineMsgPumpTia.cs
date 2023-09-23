@@ -117,7 +117,7 @@ namespace IsoOnTcp.PlcsimS7online
 
         #region Constructor
 
-        public PlcS7onlineMsgPumpTia(IPAddress plc_ipaddress, int rack, int slot)
+        internal PlcS7onlineMsgPumpTia(IPAddress plc_ipaddress, int rack, int slot)
             : base(plc_ipaddress, rack, slot)
         {
 

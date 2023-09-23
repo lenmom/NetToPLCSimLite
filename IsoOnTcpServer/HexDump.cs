@@ -15,15 +15,15 @@ using System.Text;
 
 namespace IsoOnTcp
 {
-    public class Utils
+    internal class Utils
     {
-        public static string HexDumpAll(byte[] bytes)
+        internal static string HexDumpAll(byte[] bytes)
         {
             int len = bytes.Length;
             return HexDump(bytes, len);
         }
 
-        public static string HexDump(byte[] bytes, int len)
+        internal static string HexDump(byte[] bytes, int len)
         {
             if (bytes == null)
             {

@@ -16,30 +16,40 @@ namespace TcpLib
     /// </SUMMARY>
     internal class ConnectionState
     {
+        #region Field
+        
         internal Socket m_conn;
         internal TcpServer m_server;
         internal TcpServiceProvider m_provider;
         internal byte[] m_buffer;
 
+        #endregion
+
+        #region Property
+
         /// <SUMMARY>
         /// Tells you the IP Address of the remote host.
         /// </SUMMARY>
-        public EndPoint RemoteEndPoint => m_conn.RemoteEndPoint;
+        internal EndPoint RemoteEndPoint => m_conn.RemoteEndPoint;
 
         /// <SUMMARY>
         /// Returns the number of bytes waiting to be read.
         /// </SUMMARY>
-        public int AvailableData => m_conn.Available;
+        internal int AvailableData => m_conn.Available;
 
         /// <SUMMARY>
         /// Tells you if the socket is connected.
         /// </SUMMARY>
-        public bool Connected => m_conn.Connected;
+        internal bool Connected => m_conn.Connected;
+
+        #endregion
+
+        #region Public Method
 
         /// <SUMMARY>
         /// Reads data on the socket, returns the number of bytes read.
         /// </SUMMARY>
-        public int Read(byte[] buffer, int offset, int count)
+        internal int Read(byte[] buffer, int offset, int count)
         {
             try
             {
@@ -61,7 +71,7 @@ namespace TcpLib
         /// <SUMMARY>
         /// Sends Data to the remote host.
         /// </SUMMARY>
-        public bool Write(byte[] buffer, int offset, int count)
+        internal bool Write(byte[] buffer, int offset, int count)
         {
             try
             {
@@ -74,11 +84,10 @@ namespace TcpLib
             }
         }
 
-
         /// <SUMMARY>
         /// Ends connection with the remote host.
         /// </SUMMARY>
-        public void EndConnection()
+        internal void EndConnection()
         {
             //if (m_conn != null && m_conn.Connected)
             //{
@@ -87,6 +96,8 @@ namespace TcpLib
             //}
             m_server.DropConnection(this);
         }
+
+        #endregion
     }
 
     /// <SUMMARY>
@@ -122,6 +133,8 @@ namespace TcpLib
 
     internal class TcpServer : IDisposable
     {
+        #region Field
+
         private readonly int m_port;
         private Socket m_listener;
         private readonly TcpServiceProvider m_provider;
@@ -132,50 +145,53 @@ namespace TcpLib
         private readonly WaitCallback AcceptConnection;
         private readonly AsyncCallback ReceivedDataReady;
 
-        private bool Disposed = false;
+        #endregion
+
+        #region Property
+
+        internal int MaxConnections
+        {
+            get => _maxConnections;
+            set => _maxConnections = value;
+        }
+
+        internal int CurrentConnections
+        {
+            get
+            {
+                lock (this) { return m_connections.Count; }
+            }
+        }
+
+        #endregion
+
+        #region Constructor
 
         /// <SUMMARY>
         /// Initializes server. To start accepting connections call Start method.
         /// </SUMMARY>
-        public TcpServer(TcpServiceProvider provider, int port)
+        internal TcpServer(TcpServiceProvider provider, int port)
         {
             m_provider = provider;
             m_port = port;
             m_listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            
             m_connections = new ArrayList();
+
             ConnectionReady = new AsyncCallback(ConnectionReady_Handler);
             AcceptConnection = new WaitCallback(AcceptConnection_Handler);
             ReceivedDataReady = new AsyncCallback(ReceivedDataReady_Handler);
         }
 
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                if (!Disposed)
-                {
-                    try
-                    {
-                        Stop();
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            }
-            this.Disposed = true;
-        }
+        #endregion
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
+        #region Public Method
 
         /// <SUMMARY>
         /// Start accepting connections.
         /// A false return value tell you that the port is not available.
         /// </SUMMARY>
-        public bool Start(IPAddress ip, ref string error)
+        internal bool Start(IPAddress ip, ref string error)
         {
             try
             {
@@ -195,6 +211,82 @@ namespace TcpLib
                 return false;
             }
         }
+
+        /// <SUMMARY>
+        /// Shutsdown the server
+        /// </SUMMARY>
+        internal void Stop()
+        {
+            lock (this)
+            {
+                if (m_listener == null)
+                {
+                    return;
+                }
+
+                m_listener.Dispose();
+                m_listener = null;
+                //Close all active connections
+                foreach (object obj in m_connections)
+                {
+                    ConnectionState st = obj as ConnectionState;
+                    try
+                    {
+                        st.m_provider.OnDropConnection(st);
+
+                        if (st.m_conn == null)
+                        {
+                            continue;
+                        }
+
+                        st.m_conn.Shutdown(SocketShutdown.Both);
+                        st.m_conn.Dispose();
+                        st.m_conn = null;
+                        // st.m_conn.Close();
+                    }
+                    catch (Exception)
+                    {
+                        //some error in the provider
+                    }
+                }
+                m_connections.Clear();
+            }
+        }
+
+        /// <SUMMARY>
+        /// Removes a connection from the list
+        /// </SUMMARY>
+        internal void DropConnection(ConnectionState st)
+        {
+            lock (this)
+            {
+                try
+                {
+                    st.m_provider.OnDropConnection(st);
+                    if (m_connections.Contains(st))
+                    {
+                        m_connections.Remove(st);
+                    }
+
+                    if (st.m_conn == null)
+                    {
+                        return;
+                    }
+
+                    st.m_conn.Shutdown(SocketShutdown.Both);
+                    st.m_conn.Dispose();
+                    st.m_conn = null;
+                }
+                catch (Exception)
+                {
+                    //some error in the provider
+                }
+            }
+        }
+
+        #endregion
+
+        #region Event Handler
 
         /// <SUMMARY>
         /// Callback function: A new connection is waiting.
@@ -307,90 +399,35 @@ namespace TcpLib
             }
         }
 
-        /// <SUMMARY>
-        /// Shutsdown the server
-        /// </SUMMARY>
-        public void Stop()
-        {
-            lock (this)
-            {
-                if (m_listener == null)
-                {
-                    return;
-                }
+        #endregion
 
-                m_listener.Dispose();
-                m_listener = null;
-                //Close all active connections
-                foreach (object obj in m_connections)
+        #region IDisposable Impl
+
+        private bool Disposed = false;
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (!Disposed)
                 {
-                    ConnectionState st = obj as ConnectionState;
                     try
                     {
-                        st.m_provider.OnDropConnection(st);
-
-                        if (st.m_conn == null)
-                        {
-                            continue;
-                        }
-
-                        st.m_conn.Shutdown(SocketShutdown.Both);
-                        st.m_conn.Dispose();
-                        st.m_conn = null;
-                        // st.m_conn.Close();
+                        Stop();
                     }
                     catch (Exception)
                     {
-                        //some error in the provider
                     }
                 }
-                m_connections.Clear();
             }
+            this.Disposed = true;
         }
 
-        /// <SUMMARY>
-        /// Removes a connection from the list
-        /// </SUMMARY>
-        internal void DropConnection(ConnectionState st)
+        public void Dispose()
         {
-            lock (this)
-            {
-                try
-                {
-                    st.m_provider.OnDropConnection(st);
-                    if (m_connections.Contains(st))
-                    {
-                        m_connections.Remove(st);
-                    }
-
-                    if (st.m_conn == null)
-                    {
-                        return;
-                    }
-
-                    st.m_conn.Shutdown(SocketShutdown.Both);
-                    st.m_conn.Dispose();
-                    st.m_conn = null;
-                }
-                catch (Exception)
-                {
-                    //some error in the provider
-                }
-            }
+            Dispose(true);
         }
 
-        public int MaxConnections
-        {
-            get => _maxConnections;
-            set => _maxConnections = value;
-        }
-
-        public int CurrentConnections
-        {
-            get
-            {
-                lock (this) { return m_connections.Count; }
-            }
-        }
+        #endregion
     }
 }
