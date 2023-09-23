@@ -19,43 +19,60 @@ namespace NetToPLCSimLite.Models
 
         #region Field
 
-        public Action<string> ErrorHandler;
-
         private readonly ILog log = LogExt.log;
-        private S7ProSim plcsim = new S7ProSim();
+        private S7ProSim s7proSim = new S7ProSim();
         private readonly Timer timer = new Timer();
+
+        #endregion
+
+        #region Event
+
+        internal Action<string> OnError;
 
         #endregion
 
         #region Property
 
-        public string Name { get; set; } = string.Empty;
+        internal string Name { get; set; } = string.Empty;
 
-        public string Ip { get; set; } = string.Empty;
+        internal string Ip { get; set; } = string.Empty;
 
-        public bool IsConnected { get; set; } = false;
+        internal bool IsConnected { get; set; } = false;
 
-        public StationCpu Cpu { get; set; } = StationCpu.S400;
+        internal StationCpu Cpu { get; set; } = StationCpu.S400;
 
-        public int Rack { get; set; } = 0;
+        /// <summary>
+        ///  S300/s400/S1200/S1500,0.
+        /// </summary>
+        internal int Rack { get; set; } = 0;
 
-        public int Slot { get; set; } = 3;
+        /// <summary>
+        /// S300/s400,2;
+        /// S1200/S1500,1.
+        /// </summary>
+        internal int Slot { get; set; } = 3;
 
-        public string PlcPath { get; set; } = string.Empty;
+        internal string PlcPath { get; set; } = string.Empty;
 
-        public int Instance { get; set; } = -1;
+        internal int Instance { get; set; } = -1;
 
         #endregion
 
-        #region Enum
+        #region Nested Object
 
-        public enum StationCpu
+        internal enum StationCpu
         {
             S200 = 0,
+
             S300 = 10,
+
             S400 = 20,
+
             S1200 = 30,
+
             S1300 = 40,
+
+            S1500 = 50,
         }
 
         #endregion
@@ -67,7 +84,7 @@ namespace NetToPLCSimLite.Models
             return $"Name:{Name}, IP:{Ip}, Connected:{IsConnected}, Instance:{Instance}";
         }
 
-        public bool Connect()
+        internal bool Connect()
         {
             try
             {
@@ -78,16 +95,16 @@ namespace NetToPLCSimLite.Models
 
                 Disconnect();
 
-                plcsim.ConnectionError -= Plcsim_ConnectionError;
-                plcsim.ConnectionError += Plcsim_ConnectionError;
-                plcsim.ConnectExt(Instance);
-                plcsim.SetState("RUN_P");
-                string st = plcsim.GetState();
+                s7proSim.ConnectionError -= PlcSim_ConnectionError;
+                s7proSim.ConnectionError += PlcSim_ConnectionError;
+                s7proSim.ConnectExt(Instance);
+                s7proSim.SetState("RUN_P");
+                string st = s7proSim.GetState();
                 IsConnected = st == "RUN_P" ? true : false;
 
                 if (IsConnected)
                 {
-                    plcsim.SetScanMode(ScanModeConstants.ContinuousScan);
+                    s7proSim.SetScanMode(ScanModeConstants.ContinuousScan);
                     timer.Elapsed -= Timer_Elapsed;
                     timer.Elapsed += Timer_Elapsed;
                     timer.Interval = 1000;
@@ -103,7 +120,7 @@ namespace NetToPLCSimLite.Models
             return IsConnected;
         }
 
-        public void Disconnect()
+        internal void Disconnect()
         {
             try
             {
@@ -112,8 +129,8 @@ namespace NetToPLCSimLite.Models
 
                 if (IsConnected)
                 {
-                    plcsim.ConnectionError -= Plcsim_ConnectionError;
-                    plcsim.Disconnect();
+                    s7proSim.ConnectionError -= PlcSim_ConnectionError;
+                    s7proSim.Disconnect();
                     log.Info($"DISCONNECTED, Name:{Name}, IP:{Ip}, INS:{Instance}");
                 }
             }
@@ -127,7 +144,7 @@ namespace NetToPLCSimLite.Models
             }
         }
 
-        public void DataReceived(byte[] data)
+        internal void DataReceived(byte[] data)
         {
             if (!IsConnected || data == null)
             {
@@ -154,13 +171,13 @@ namespace NetToPLCSimLite.Models
                     if (t_size == S7COMM_TRANSPORT_SIZE_BIT)
                     {
                         bool set = data[28] == 0 ? false : true;
-                        plcsim.WriteInputPoint(bytepos, bitpos, set);
+                        s7proSim.WriteInputPoint(bytepos, bitpos, set);
                     }
                     else if (t_size == S7COMM_TRANSPORT_SIZE_BYTE)
                     {
                         object set = new byte[len];
                         Array.Copy(data, 28, (byte[])set, 0, len);
-                        plcsim.WriteInputImage(bytepos, ref set);
+                        s7proSim.WriteInputImage(bytepos, ref set);
                     }
                 }
             }
@@ -173,19 +190,19 @@ namespace NetToPLCSimLite.Models
 
         #endregion
 
-        #region Private Method
+        #region Event Handler
 
-        private void Plcsim_ConnectionError(string ControlEngine, int Error)
+        private void PlcSim_ConnectionError(string ControlEngine, int Error)
         {
             try
             {
                 log.Error($"PROSIM ERROR({Error}), Name:{Name}, IP:{Ip}, INS:{PlcPath}");
                 Disconnect();
-                ErrorHandler?.Invoke(Ip);
+                OnError?.Invoke(Ip);
             }
             catch (Exception ex)
             {
-                log.Error(nameof(Plcsim_ConnectionError), ex);
+                log.Error(nameof(PlcSim_ConnectionError), ex);
             }
         }
 
@@ -193,11 +210,11 @@ namespace NetToPLCSimLite.Models
         {
             try
             {
-                bool st = plcsim?.GetState() == "RUN_P" ? true : false;
+                bool st = s7proSim?.GetState() == "RUN_P" ? true : false;
                 if (!st)
                 {
-                    plcsim?.SetState("RUN_P");
-                    plcsim?.SetScanMode(ScanModeConstants.ContinuousScan);
+                    s7proSim?.SetState("RUN_P");
+                    s7proSim?.SetScanMode(ScanModeConstants.ContinuousScan);
                 }
             }
             catch (Exception ex)
@@ -212,7 +229,7 @@ namespace NetToPLCSimLite.Models
 
         #region IDisposable Support
 
-        private bool disposedValue = false; // 중복 호출을 검색하려면
+        private bool disposedValue = false;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -222,7 +239,7 @@ namespace NetToPLCSimLite.Models
                 {
                     // TODO: 관리되는 상태(관리되는 개체)를 삭제합니다.
                     Disconnect();
-                    plcsim = null;
+                    s7proSim = null;
                 }
 
                 // TODO: 관리되지 않는 리소스(관리되지 않는 개체)를 해제하고 아래의 종료자를 재정의합니다.
@@ -232,13 +249,6 @@ namespace NetToPLCSimLite.Models
             }
         }
 
-        // TODO: 위의 Dispose(bool disposing)에 관리되지 않는 리소스를 해제하는 코드가 포함되어 있는 경우에만 종료자를 재정의합니다.
-        // ~S7Protocol() {
-        //   // 이 코드를 변경하지 마세요. 위의 Dispose(bool disposing)에 정리 코드를 입력하세요.
-        //   Dispose(false);
-        // }
-
-        // 삭제 가능한 패턴을 올바르게 구현하기 위해 추가된 코드입니다.
         public void Dispose()
         {
             // 이 코드를 변경하지 마세요. 위의 Dispose(bool disposing)에 정리 코드를 입력하세요.

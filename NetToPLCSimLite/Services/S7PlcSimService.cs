@@ -20,7 +20,6 @@ namespace NetToPLCSimLite.Services
     public class S7PlcSimService : IDisposable
     {
         #region Field
-        public event EventHandler<string> PlcSimErr;
 
         private readonly ILog log = LogExt.log;
         private readonly ConcurrentDictionary<string, IsoToS7online> s7ServerList = new ConcurrentDictionary<string, IsoToS7online>();
@@ -30,7 +29,13 @@ namespace NetToPLCSimLite.Services
         #region Property
 
         public List<S7Protocol> PlcSimList { get; } = new List<S7Protocol>();
-        
+
+        #endregion
+
+        #region Event
+
+        public event EventHandler<string> OnPlcSimError;
+
         #endregion
 
         #region Public Method
@@ -45,7 +50,8 @@ namespace NetToPLCSimLite.Services
                 System.ServiceProcess.ServiceController s7svc = service.FindS7Service();
                 if (s7svc == null)
                 {
-                    throw new NullReferenceException();
+
+                    return false;
                 }
 
                 ret = service.IsPortAvailable(CONST.S7_PORT);
@@ -219,7 +225,7 @@ namespace NetToPLCSimLite.Services
                                 s7ServerList.TryAdd(item.Ip, srv);
 
                                 ret.Add(item);
-                                item.ErrorHandler = new Action<string>((ipp) => ErrorHandler(ipp));
+                                item.OnError = new Action<string>((ipp) => OnS7ProtocalError_Handler(ipp));
 
                                 log.Info($"OK, {item.ToString()}");
                             }
@@ -292,7 +298,11 @@ namespace NetToPLCSimLite.Services
             return ret;
         }
 
-        private void ErrorHandler(string ip)
+        #endregion
+
+        #region Event Handler
+
+        private void OnS7ProtocalError_Handler(string ip)
         {
             // Return
             if (string.IsNullOrEmpty(ip))
@@ -302,25 +312,29 @@ namespace NetToPLCSimLite.Services
 
             lock (PlcSimList)
             {
-                S7Protocol error = PlcSimList.FirstOrDefault(x => !x.IsConnected && x.Ip == ip);
-                if (error != null && s7ServerList.TryRemove(error.Ip, out IsoToS7online srv))
+                S7Protocol protocolOnError = PlcSimList.FirstOrDefault(x => !x.IsConnected && x.Ip == ip);
+                if (protocolOnError != null && s7ServerList.TryRemove(protocolOnError.Ip, out IsoToS7online isoToS7onlineSvc))
                 {
-                    srv?.Dispose();
-                    srv = null;
+                    isoToS7onlineSvc?.Dispose();
+                    isoToS7onlineSvc = null;
                 }
-                error?.Dispose();
-                PlcSimList.Remove(error);
-                log.Info($"STOPPED, {error.ToString()}");
-                PlcSimErr?.Invoke(this, error.Ip);
-                error = null;
+
+                if (protocolOnError != null)
+                {
+                    protocolOnError.Dispose();
+                    PlcSimList.Remove(protocolOnError);
+                    log.Info($"STOPPED, {protocolOnError.ToString()}");
+                    OnPlcSimError?.Invoke(this, protocolOnError.Ip);
+                    protocolOnError = null;
+                }
             }
         }
-        
+
         #endregion
 
         #region IDisposable Support
 
-        private bool disposedValue = false; // 중복 호출을 검색하려면
+        private bool disposedValue = false;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -328,32 +342,19 @@ namespace NetToPLCSimLite.Services
             {
                 if (disposing)
                 {
-                    // TODO: 관리되는 상태(관리되는 개체)를 삭제합니다.
                     SetStation(null);
                 }
-
-                // TODO: 관리되지 않는 리소스(관리되지 않는 개체)를 해제하고 아래의 종료자를 재정의합니다.
-                // TODO: 큰 필드를 null로 설정합니다.
 
                 disposedValue = true;
             }
         }
 
-        // TODO: 위의 Dispose(bool disposing)에 관리되지 않는 리소스를 해제하는 코드가 포함되어 있는 경우에만 종료자를 재정의합니다.
-        // ~S7PlcSimService() {
-        //   // 이 코드를 변경하지 마세요. 위의 Dispose(bool disposing)에 정리 코드를 입력하세요.
-        //   Dispose(false);
-        // }
-
-        // 삭제 가능한 패턴을 올바르게 구현하기 위해 추가된 코드입니다.
         public void Dispose()
         {
-            // 이 코드를 변경하지 마세요. 위의 Dispose(bool disposing)에 정리 코드를 입력하세요.
             Dispose(true);
-            // TODO: 위의 종료자가 재정의된 경우 다음 코드 줄의 주석 처리를 제거합니다.
-            // GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
-        
+
         #endregion
     }
 }

@@ -13,7 +13,7 @@
 
 using System.Text;
 
-namespace HexDumping
+namespace IsoOnTcp
 {
     public class Utils
     {

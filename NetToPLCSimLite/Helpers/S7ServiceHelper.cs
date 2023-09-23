@@ -9,18 +9,23 @@ using log4net;
 
 namespace NetToPLCSimLite.Helpers
 {
-    public class S7ServiceHelper
+    internal class S7ServiceHelper
     {
         #region Field
 
         private readonly ILog log = LogExt.log;
         private TcpListener tcp;
-        
+
         #endregion
 
         #region Public Method
 
-        public ServiceController FindS7Service()
+        /// <summary>
+        /// Find s7 service which is installed according to the installation of TIA with service name: s7oiehsx/s7oiehsx64.
+        /// this operation requires administrator's priviledge.
+        /// </summary>
+        /// <returns><c>ServiceController</c> of service s7oiehsx/s7oiehsx64.</returns>
+        internal ServiceController FindS7Service()
         {
             ServiceController[] services = ServiceController.GetServices();
             ServiceController s7svc = services.FirstOrDefault(x => x.ServiceName == "s7oiehsx" || x.ServiceName == "s7oiehsx64");
@@ -37,7 +42,7 @@ namespace NetToPLCSimLite.Helpers
             return s7svc;
         }
 
-        public bool StartService(ServiceController svc, int timeout)
+        internal bool StartService(ServiceController svc, int timeout)
         {
             if (svc == null)
             {
@@ -65,7 +70,7 @@ namespace NetToPLCSimLite.Helpers
             }
         }
 
-        public bool StopService(ServiceController svc, int timeout)
+        internal bool StopService(ServiceController svc, int timeout)
         {
             if (svc == null)
             {
@@ -93,7 +98,7 @@ namespace NetToPLCSimLite.Helpers
             }
         }
 
-        public bool StartTcpServer(int port)
+        internal bool StartTcpServer(int port)
         {
             try
             {
@@ -118,7 +123,7 @@ namespace NetToPLCSimLite.Helpers
             }
         }
 
-        public bool StopTcpServer()
+        internal bool StopTcpServer()
         {
             try
             {
@@ -145,7 +150,7 @@ namespace NetToPLCSimLite.Helpers
             }
         }
 
-        public bool IsPortAvailable(int port)
+        internal bool IsPortAvailable(int port)
         {
             bool isAvailable = true;
 

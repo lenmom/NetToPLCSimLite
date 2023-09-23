@@ -20,7 +20,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace PlcsimS7online
+namespace IsoOnTcp.PlcsimS7online
 {
     internal abstract class PlcS7onlineMsgPump : Form
     {
@@ -579,7 +579,7 @@ namespace PlcsimS7online
             dump += "** Start user_data_1 **" + Environment.NewLine;
             if (fd.user_data_1 != null)
             {
-                dump += HexDumping.Utils.HexDump(fd.user_data_1, fd.user_data_1.Length);
+                dump += Utils.HexDump(fd.user_data_1, fd.user_data_1.Length);
             }
 
             dump += "** End user_data_1 **" + Environment.NewLine;

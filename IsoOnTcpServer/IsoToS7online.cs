@@ -17,7 +17,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-using PlcsimS7online;
+using IsoOnTcp.PlcsimS7online;
 
 using TcpLib;
 
@@ -198,9 +198,13 @@ namespace IsoOnTcp
 
     internal class QueueEntry
     {
-        public IsoServiceProvider isoclient;
-        public ConnectionState client;
-        public byte[] message;
+#pragma warning disable CS0649
+
+        internal IsoServiceProvider isoclient;
+        internal ConnectionState client;
+        internal byte[] message;
+
+#pragma warning restore CS0649
     }
 
     internal enum PlcSimProtocolType

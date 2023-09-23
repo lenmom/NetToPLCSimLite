@@ -16,7 +16,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace PlcsimS7online
+namespace IsoOnTcp.PlcsimS7online
 {
     internal class PlcS7onlineMsgPumpS7 : PlcS7onlineMsgPump
     {
