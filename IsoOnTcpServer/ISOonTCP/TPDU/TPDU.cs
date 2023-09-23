@@ -12,15 +12,25 @@
  /*********************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Collections;
 
 namespace IsoOnTcp
 {
-    public class TPDU
+    internal class TPDU
     {
+        #region Field
+
+        // fixed part
+        public ushort Li;           // Length indicator, 1 Byte
+        public int PDUType;         // PDU Type/Code, 4 Bits
+        // public UInt16 Cdt;          // Cdt, 4 Bits
+
+        public TPDUData PduData;
+        public TPDUConnection PduCon;
+
+        #endregion
+
+        #region Nested Object
+        
         public enum TPDU_TYPES
         {
             ED = 0x1,       // ED Expedited Data
@@ -36,13 +46,9 @@ namespace IsoOnTcp
             DT = 0xF        // DT Data
         };
 
-        // fixed part
-        public UInt16 Li;           // Length indicator, 1 Byte
-        public int PDUType;         // PDU Type/Code, 4 Bits
-        // public UInt16 Cdt;          // Cdt, 4 Bits
+        #endregion
 
-        public TPDUData PduData;
-        public TPDUConnection PduCon;
+        #region Constructor
 
         public TPDU()
         { }
@@ -61,10 +67,12 @@ namespace IsoOnTcp
         {
 
             if (packetLen < 3)
+            {
                 throw new Exception("TPUD: Packet size lower than 3 bytes.");
+            }
 
             Li = packet[0];
-            PDUType = (packet[1] >> 4);
+            PDUType = packet[1] >> 4;
 
             switch (PDUType)
             {
@@ -80,6 +88,10 @@ namespace IsoOnTcp
             }
         }
 
+        #endregion
+
+        #region Public Method
+        
         public byte[] GetBytes()
         {
             int size = 0;
@@ -94,7 +106,9 @@ namespace IsoOnTcp
                     tpdu[1] = Convert.ToByte(PDUType << 4);
                     tpdu[2] = Convert.ToByte(PduData.TPDUNr);
                     if (PduData.EOT)
-                       tpdu[2] += 128;
+                    {
+                        tpdu[2] += 128;
+                    }
 
                     Array.Copy(PduData.Payload, 0, tpdu, TPDUData.DT_HLEN, PduData.Payload.Length);
                     break;
@@ -122,12 +136,16 @@ namespace IsoOnTcp
         {
             PDUType = (int)TPDU_TYPES.DT;
             Li = 2;
-            PduData = new TPDUData();
-            PduData.TPDUNr = 0;
-            PduData.EOT = lastDataUnit;
-            PduData.Payload = new byte[length];
-            PduData.PayloadLength = length;
+            PduData = new TPDUData
+            {
+                TPDUNr = 0,
+                EOT = lastDataUnit,
+                Payload = new byte[length],
+                PayloadLength = length
+            };
             Array.Copy(data, sourceIndex, PduData.Payload, 0, length);
         }
+
+        #endregion
     }
 }

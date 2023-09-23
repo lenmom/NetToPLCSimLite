@@ -13,21 +13,34 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Net;
-using System.Diagnostics;
 
 namespace PlcsimS7online
 {
-    public abstract class PlcS7onlineMsgPump : Form
+    internal abstract class PlcS7onlineMsgPump : Form
     {
+        #region Field
+
         private const int WM_USER = 0x0400;
-        public const int WM_M_CONNECTPLCSIM = WM_USER + 1001;      // connect to Plcsim
-        public const int WM_M_SENDDATA = WM_USER + 1002;           // send data to Plcsim
-        public const int WM_M_EXIT = WM_USER + 1003;               // disconnect from Plcsim, and end own thread
+
+        /// <summary>
+        /// connect to Plcsim
+        /// </summary>
+        public const int WM_M_CONNECTPLCSIM = WM_USER + 1001;
+        /// <summary>
+        /// send data to Plcsim
+        /// </summary>
+        public const int WM_M_SENDDATA = WM_USER + 1002;
+
+        /// <summary>
+        /// disconnect from Plcsim, and end own thread
+        /// </summary>
+        public const int WM_M_EXIT = WM_USER + 1003;               
 
         protected const int WM_SINEC = WM_USER + 500;
 
@@ -44,6 +57,17 @@ namespace PlcsimS7online
         protected int m_FdrLen;
 
         protected static bool m_TraceEnabled;
+
+        #endregion
+
+        #region Event 
+
+        public delegate void OnDataFromPlcsimReceived(MessageFromPlcsim message);
+        public event OnDataFromPlcsimReceived eventOnDataFromPlcsimReceived;
+
+        #endregion
+
+        #region Constructor
 
         public PlcS7onlineMsgPump(IPAddress plc_ipaddress, int rack, int slot)
         {
@@ -65,16 +89,7 @@ namespace PlcsimS7online
             }
         }
 
-        protected enum PlcsimConnectionState
-        {
-            NotConnected,
-            ConnectState1,
-            ConnectState2,
-            ConnectState3,
-            Connected,
-            DisconnectState1,
-            DisconnectState2
-        }
+        #endregion
 
         #region External DLL References
 
@@ -101,6 +116,18 @@ namespace PlcsimS7online
 
         #endregion
 
+        #region Nested Object
+
+        protected enum PlcsimConnectionState
+        {
+            NotConnected,
+            ConnectState1,
+            ConnectState2,
+            ConnectState3,
+            Connected,
+            DisconnectState1,
+            DisconnectState2
+        }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
         protected struct S7OexchangeBlock
@@ -141,11 +168,11 @@ namespace PlcsimS7online
             public byte application_block_remote_address_station;       // address of the remote-station
             public byte application_block_remote_address_segment;       // only for network-connection !!!
             public ushort application_block_service_class;              // priority of service
-            public Int32 application_block_receive_l_sdu_buffer_ptr;    // address and length of received netto-data, exception:
+            public int application_block_receive_l_sdu_buffer_ptr;    // address and length of received netto-data, exception:
             public byte application_block_receive_l_sdu_length;         // address and length of received netto-data, exception:
             public byte application_block_reserved_1;                   // (reserved for FDL !!!!!!!!!!)
             public byte application_block_reserved;                     // (reserved for FDL !!!!!!!!!!)
-            public Int32 application_block_send_l_sdu_buffer_ptr;       // address and length of send-netto-data, exception:
+            public int application_block_send_l_sdu_buffer_ptr;       // address and length of send-netto-data, exception:
             public byte application_block_send_l_sdu_length;            // address and length of send-netto-data, exception:
             public ushort application_block_l_status;                   // link-status of service or update_state for srd-indication
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
@@ -184,48 +211,15 @@ namespace PlcsimS7online
             public byte[] pdu;
         }
 
+        #endregion
+
+        #region Public Method
+
         public void Run()
         {
             Application.ThreadException += new ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
             Application.Run();
-        }
-
-        public delegate void OnDataFromPlcsimReceived(MessageFromPlcsim message);
-        public event OnDataFromPlcsimReceived eventOnDataFromPlcsimReceived;
-
-        protected void SendS7OExchangeBlockToPlcsim(S7OexchangeBlock data)
-        {
-            int len = Marshal.SizeOf(data);
-            byte[] buffer = new byte[len];
-
-            ushort send_len = (ushort)(data.seg_length_1 + data.headerlength);
-
-            IntPtr ptr = Marshal.AllocHGlobal(len);
-            Marshal.StructureToPtr(data, ptr, false);
-            Marshal.Copy(ptr, buffer, 0, len);
-            Marshal.DestroyStructure(ptr, typeof(S7OexchangeBlock));
-            Marshal.FreeHGlobal(ptr);
-
-            int ret = SCP_send(m_connectionHandle, send_len, buffer);
-            if (ret < 0)
-            {
-                SendErrorMessage("ERROR: SCP_send failed");
-                ExitThisThread();
-            }
-        }
-
-        protected WndProcMessage GetReceivedMessage(ref Message m)
-        {
-            WndProcMessage rec = new WndProcMessage();
-            rec.pdulength = Marshal.ReadInt32(m.LParam, 0);
-            rec.pdu = new byte[rec.pdulength];
-
-            byte[] buffer = new byte[rec.pdulength + 4];
-            Marshal.Copy(m.LParam, buffer, 0, buffer.Length);
-            Buffer.BlockCopy(buffer, 4, rec.pdu, 0, rec.pdulength);
-
-            return rec;
         }
 
         public List<string> ListReachablePartners()
@@ -272,15 +266,44 @@ namespace PlcsimS7online
             return reachablePartners;
         }
 
-        private string GetAsciiStringFromBytes(byte[] buffer, int start, int maxlen)
+        #endregion
+
+        #region Protected Method
+
+        protected void SendS7OExchangeBlockToPlcsim(S7OexchangeBlock data)
         {
-            for (int i = start; i < start + maxlen; i++)
+            int len = Marshal.SizeOf(data);
+            byte[] buffer = new byte[len];
+
+            ushort send_len = (ushort)(data.seg_length_1 + data.headerlength);
+
+            IntPtr ptr = Marshal.AllocHGlobal(len);
+            Marshal.StructureToPtr(data, ptr, false);
+            Marshal.Copy(ptr, buffer, 0, len);
+            Marshal.DestroyStructure(ptr, typeof(S7OexchangeBlock));
+            Marshal.FreeHGlobal(ptr);
+
+            int ret = SCP_send(m_connectionHandle, send_len, buffer);
+            if (ret < 0)
             {
-                if (buffer[i] != 0) continue;
-                return Encoding.ASCII.GetString(buffer, start, i - start);
+                SendErrorMessage("ERROR: SCP_send failed");
+                ExitThisThread();
             }
-            // No terminating null found
-            return Encoding.ASCII.GetString(buffer, start, maxlen);
+        }
+
+        protected WndProcMessage GetReceivedMessage(ref Message m)
+        {
+            WndProcMessage rec = new WndProcMessage
+            {
+                pdulength = Marshal.ReadInt32(m.LParam, 0)
+            };
+            rec.pdu = new byte[rec.pdulength];
+
+            byte[] buffer = new byte[rec.pdulength + 4];
+            Marshal.Copy(m.LParam, buffer, 0, buffer.Length);
+            Buffer.BlockCopy(buffer, 4, rec.pdu, 0, rec.pdulength);
+
+            return rec;
         }
 
         protected S7OexchangeBlock ReceiveFromPlcsimDirect()
@@ -315,10 +338,12 @@ namespace PlcsimS7online
         {
             if (eventOnDataFromPlcsimReceived != null)
             {
-                MessageFromPlcsim message = new MessageFromPlcsim();
-                message.type = MessageFromPlcsimType.ErrorMessage;
-                message.textmessage = text;
-                message.pdu = null;
+                MessageFromPlcsim message = new MessageFromPlcsim
+                {
+                    type = MessageFromPlcsimType.ErrorMessage,
+                    textmessage = text,
+                    pdu = null
+                };
                 eventOnDataFromPlcsimReceived(message);
             }
         }
@@ -327,10 +352,12 @@ namespace PlcsimS7online
         {
             if (eventOnDataFromPlcsimReceived != null)
             {
-                MessageFromPlcsim message = new MessageFromPlcsim();
-                message.type = MessageFromPlcsimType.ConnectSuccess;
-                message.textmessage = text;
-                message.pdu = null;
+                MessageFromPlcsim message = new MessageFromPlcsim
+                {
+                    type = MessageFromPlcsimType.ConnectSuccess,
+                    textmessage = text,
+                    pdu = null
+                };
                 eventOnDataFromPlcsimReceived(message);
             }
         }
@@ -339,10 +366,12 @@ namespace PlcsimS7online
         {
             if (eventOnDataFromPlcsimReceived != null)
             {
-                MessageFromPlcsim message = new MessageFromPlcsim();
-                message.type = MessageFromPlcsimType.ConnectError;
-                message.textmessage = text;
-                message.pdu = null;
+                MessageFromPlcsim message = new MessageFromPlcsim
+                {
+                    type = MessageFromPlcsimType.ConnectError,
+                    textmessage = text,
+                    pdu = null
+                };
                 eventOnDataFromPlcsimReceived(message);
             }
         }
@@ -351,10 +380,12 @@ namespace PlcsimS7online
         {
             if (eventOnDataFromPlcsimReceived != null)
             {
-                MessageFromPlcsim message = new MessageFromPlcsim();
-                message.type = MessageFromPlcsimType.StatusMessage;
-                message.textmessage = text;
-                message.pdu = null;
+                MessageFromPlcsim message = new MessageFromPlcsim
+                {
+                    type = MessageFromPlcsimType.StatusMessage,
+                    textmessage = text,
+                    pdu = null
+                };
                 eventOnDataFromPlcsimReceived(message);
             }
         }
@@ -363,23 +394,27 @@ namespace PlcsimS7online
         {
             if (eventOnDataFromPlcsimReceived != null)
             {
-                MessageFromPlcsim message = new MessageFromPlcsim();
-                message.type = MessageFromPlcsimType.Pdu;
-                message.textmessage = String.Empty;
-                message.pdu = data;
+                MessageFromPlcsim message = new MessageFromPlcsim
+                {
+                    type = MessageFromPlcsimType.Pdu,
+                    textmessage = string.Empty,
+                    pdu = data
+                };
                 eventOnDataFromPlcsimReceived(message);
             }
         }
 
         protected S7OexchangeBlock GetNewS7OexchangeBlock(ushort user, byte rb_type, byte subsystem, byte opcode, ushort response)
         {
-            S7OexchangeBlock block = new S7OexchangeBlock();
-            block.headerlength = 80;
-            block.user = user;
-            block.rb_type = rb_type;
-            block.subsystem = subsystem;
-            block.opcode = opcode;
-            block.response = response;
+            S7OexchangeBlock block = new S7OexchangeBlock
+            {
+                headerlength = 80,
+                user = user,
+                rb_type = rb_type,
+                subsystem = subsystem,
+                opcode = opcode,
+                response = response
+            };
 
             return block;
         }
@@ -387,53 +422,56 @@ namespace PlcsimS7online
         protected void DumpS7OexchangeBlock(S7OexchangeBlock fd)
         {
             string dump;
-            dump = ("******************** S7OexchangeBlock **********************************" + Environment.NewLine);
-            dump += ("** Header Start **" + Environment.NewLine);
+            dump = "******************** S7OexchangeBlock **********************************" + Environment.NewLine;
+            dump += "** Header Start **" + Environment.NewLine;
             //dump += ("unknown      : 0x" + String.Format("{0:X02}", fd.unknown[0] + fd.unknown[1] + Environment.NewLine);
-            dump += ("headerlength : " + fd.headerlength + Environment.NewLine);
-            dump += ("user         : 0x" + String.Format("{0:X02}", fd.user) + Environment.NewLine);
-            dump += ("rb_type      : 0x" + String.Format("{0:X02}", fd.rb_type) + Environment.NewLine);
-            dump += ("priority     : 0x" + String.Format("{0:X02}", fd.priority) + Environment.NewLine);
-            dump += ("reserved_1   : 0x" + String.Format("{0:X02}", fd.reserved_1) + Environment.NewLine);
-            dump += ("reserved_2   : 0x" + String.Format("{0:X02}", fd.reserved_2) + Environment.NewLine);
-            dump += ("subsystem    : 0x" + String.Format("{0:X02}", fd.subsystem) + Environment.NewLine);
-            dump += ("opcode       : 0x" + String.Format("{0:X02}", fd.opcode) + Environment.NewLine);
-            dump += ("response     : 0x" + String.Format("{0:X02}", fd.response) + Environment.NewLine);
-            dump += ("fill_length_1: 0x" + String.Format("{0:X02}", fd.fill_length_1) + Environment.NewLine);
-            dump += ("reserved_3   : 0x" + String.Format("{0:X02}", fd.reserved_3) + Environment.NewLine);
-            dump += ("seg_length_1 : 0x" + String.Format("{0:X02}", fd.seg_length_1) + Environment.NewLine);
-            dump += ("offset_1     : 0x" + String.Format("{0:X02}", fd.offset_1) + Environment.NewLine);
-            dump += ("reserved_4   : 0x" + String.Format("{0:X02}", fd.reserved_4) + Environment.NewLine);
-            dump += ("fill_length_2: 0x" + String.Format("{0:X02}", fd.fill_length_2) + Environment.NewLine);
-            dump += ("reserved_5   : 0x" + String.Format("{0:X02}", fd.reserved_5) + Environment.NewLine);
-            dump += ("seg_length_2 : 0x" + String.Format("{0:X02}", fd.seg_length_2) + Environment.NewLine);
-            dump += ("offset_2     : 0x" + String.Format("{0:X02}", fd.offset_2) + Environment.NewLine);
-            dump += ("reserved_6   : 0x" + String.Format("{0:X02}", fd.reserved_6) + Environment.NewLine);
-            dump += ("** End of Header **" + Environment.NewLine);
+            dump += "headerlength : " + fd.headerlength + Environment.NewLine;
+            dump += "user         : 0x" + string.Format("{0:X02}", fd.user) + Environment.NewLine;
+            dump += "rb_type      : 0x" + string.Format("{0:X02}", fd.rb_type) + Environment.NewLine;
+            dump += "priority     : 0x" + string.Format("{0:X02}", fd.priority) + Environment.NewLine;
+            dump += "reserved_1   : 0x" + string.Format("{0:X02}", fd.reserved_1) + Environment.NewLine;
+            dump += "reserved_2   : 0x" + string.Format("{0:X02}", fd.reserved_2) + Environment.NewLine;
+            dump += "subsystem    : 0x" + string.Format("{0:X02}", fd.subsystem) + Environment.NewLine;
+            dump += "opcode       : 0x" + string.Format("{0:X02}", fd.opcode) + Environment.NewLine;
+            dump += "response     : 0x" + string.Format("{0:X02}", fd.response) + Environment.NewLine;
+            dump += "fill_length_1: 0x" + string.Format("{0:X02}", fd.fill_length_1) + Environment.NewLine;
+            dump += "reserved_3   : 0x" + string.Format("{0:X02}", fd.reserved_3) + Environment.NewLine;
+            dump += "seg_length_1 : 0x" + string.Format("{0:X02}", fd.seg_length_1) + Environment.NewLine;
+            dump += "offset_1     : 0x" + string.Format("{0:X02}", fd.offset_1) + Environment.NewLine;
+            dump += "reserved_4   : 0x" + string.Format("{0:X02}", fd.reserved_4) + Environment.NewLine;
+            dump += "fill_length_2: 0x" + string.Format("{0:X02}", fd.fill_length_2) + Environment.NewLine;
+            dump += "reserved_5   : 0x" + string.Format("{0:X02}", fd.reserved_5) + Environment.NewLine;
+            dump += "seg_length_2 : 0x" + string.Format("{0:X02}", fd.seg_length_2) + Environment.NewLine;
+            dump += "offset_2     : 0x" + string.Format("{0:X02}", fd.offset_2) + Environment.NewLine;
+            dump += "reserved_6   : 0x" + string.Format("{0:X02}", fd.reserved_6) + Environment.NewLine;
+            dump += "** End of Header **" + Environment.NewLine;
 
-            dump += ("** Start of application Block **" + Environment.NewLine);
-            dump += ("application_block_opcode                 : 0x" + String.Format("{0:X02}", fd.application_block_opcode) + Environment.NewLine);
-            dump += ("application_block_subsystem              : 0x" + String.Format("{0:X02}", fd.application_block_subsystem) + Environment.NewLine);
-            dump += ("application_block_id                     : 0x" + String.Format("{0:X02}", fd.application_block_id) + Environment.NewLine);
-            dump += ("application_block_service                : 0x" + String.Format("{0:X02}", fd.application_block_service) + Environment.NewLine);
-            dump += ("application_block_local_address_station  : 0x" + String.Format("{0:X02}", fd.application_block_local_address_station) + Environment.NewLine);
-            dump += ("application_block_local_address_segment  : 0x" + String.Format("{0:X02}", fd.application_block_local_address_segment) + Environment.NewLine);
-            dump += ("application_block_ssap                   : 0x" + String.Format("{0:X02}", fd.application_block_ssap) + Environment.NewLine);
-            dump += ("application_block_dsap                   : 0x" + String.Format("{0:X02}", fd.application_block_dsap) + Environment.NewLine);
-            dump += ("application_block_remote_address_station : 0x" + String.Format("{0:X02}", fd.application_block_remote_address_station) + Environment.NewLine);
-            dump += ("application_block_remote_address_segment : 0x" + String.Format("{0:X02}", fd.application_block_remote_address_segment) + Environment.NewLine);
-            dump += ("application_block_service_class          : 0x" + String.Format("{0:X02}", fd.application_block_service_class) + Environment.NewLine);
-            dump += ("application_block_receive_l_sdu_length   : 0x" + String.Format("{0:X02}", fd.application_block_receive_l_sdu_length) + Environment.NewLine);
-            dump += ("application_block_reserved_1             : 0x" + String.Format("{0:X02}", fd.application_block_reserved_1) + Environment.NewLine);
-            dump += ("application_block_reserved               : 0x" + String.Format("{0:X02}", fd.application_block_reserved) + Environment.NewLine);
-            dump += ("application_block_send_l_sdu_length      : 0x" + String.Format("{0:X02}", fd.application_block_send_l_sdu_length) + Environment.NewLine);
-            dump += ("application_block_l_status               : 0x" + String.Format("{0:X02}", fd.application_block_l_status) + Environment.NewLine);
-            dump += ("** End of application Block **" + Environment.NewLine);
-            dump += ("** Start user_data_1 **" + Environment.NewLine);
+            dump += "** Start of application Block **" + Environment.NewLine;
+            dump += "application_block_opcode                 : 0x" + string.Format("{0:X02}", fd.application_block_opcode) + Environment.NewLine;
+            dump += "application_block_subsystem              : 0x" + string.Format("{0:X02}", fd.application_block_subsystem) + Environment.NewLine;
+            dump += "application_block_id                     : 0x" + string.Format("{0:X02}", fd.application_block_id) + Environment.NewLine;
+            dump += "application_block_service                : 0x" + string.Format("{0:X02}", fd.application_block_service) + Environment.NewLine;
+            dump += "application_block_local_address_station  : 0x" + string.Format("{0:X02}", fd.application_block_local_address_station) + Environment.NewLine;
+            dump += "application_block_local_address_segment  : 0x" + string.Format("{0:X02}", fd.application_block_local_address_segment) + Environment.NewLine;
+            dump += "application_block_ssap                   : 0x" + string.Format("{0:X02}", fd.application_block_ssap) + Environment.NewLine;
+            dump += "application_block_dsap                   : 0x" + string.Format("{0:X02}", fd.application_block_dsap) + Environment.NewLine;
+            dump += "application_block_remote_address_station : 0x" + string.Format("{0:X02}", fd.application_block_remote_address_station) + Environment.NewLine;
+            dump += "application_block_remote_address_segment : 0x" + string.Format("{0:X02}", fd.application_block_remote_address_segment) + Environment.NewLine;
+            dump += "application_block_service_class          : 0x" + string.Format("{0:X02}", fd.application_block_service_class) + Environment.NewLine;
+            dump += "application_block_receive_l_sdu_length   : 0x" + string.Format("{0:X02}", fd.application_block_receive_l_sdu_length) + Environment.NewLine;
+            dump += "application_block_reserved_1             : 0x" + string.Format("{0:X02}", fd.application_block_reserved_1) + Environment.NewLine;
+            dump += "application_block_reserved               : 0x" + string.Format("{0:X02}", fd.application_block_reserved) + Environment.NewLine;
+            dump += "application_block_send_l_sdu_length      : 0x" + string.Format("{0:X02}", fd.application_block_send_l_sdu_length) + Environment.NewLine;
+            dump += "application_block_l_status               : 0x" + string.Format("{0:X02}", fd.application_block_l_status) + Environment.NewLine;
+            dump += "** End of application Block **" + Environment.NewLine;
+            dump += "** Start user_data_1 **" + Environment.NewLine;
             if (fd.user_data_1 != null)
+            {
                 dump += HexDumping.Utils.HexDump(fd.user_data_1, fd.user_data_1.Length);
-            dump += ("** End user_data_1 **" + Environment.NewLine);
-            dump += ("**************************************************************");
+            }
+
+            dump += "** End user_data_1 **" + Environment.NewLine;
+            dump += "**************************************************************";
 
             DoTrace(dump, false);
         }
@@ -489,16 +527,6 @@ namespace PlcsimS7online
             }
         }
 
-        static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
-        {
-            //MessageBox.Show(e.Exception.Message, "Unhandled Thread Exception");
-        }
-
-        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            //MessageBox.Show((e.ExceptionObject as Exception).Message, "Unhandled UI Exception");
-        }
-
         protected static void DoTrace(string message)
         {
             DoTrace(message, true);
@@ -519,5 +547,36 @@ namespace PlcsimS7online
                 Trace.Flush();
             }
         }
+
+        #endregion
+
+        #region Private Method
+
+        private string GetAsciiStringFromBytes(byte[] buffer, int start, int maxlen)
+        {
+            for (int i = start; i < start + maxlen; i++)
+            {
+                if (buffer[i] != 0)
+                {
+                    continue;
+                }
+
+                return Encoding.ASCII.GetString(buffer, start, i - start);
+            }
+            // No terminating null found
+            return Encoding.ASCII.GetString(buffer, start, maxlen);
+        }
+
+        private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+            //MessageBox.Show(e.Exception.Message, "Unhandled Thread Exception");
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            //MessageBox.Show((e.ExceptionObject as Exception).Message, "Unhandled UI Exception");
+        }
+
+        #endregion
     }
 }

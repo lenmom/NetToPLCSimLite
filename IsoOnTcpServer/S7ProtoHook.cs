@@ -21,9 +21,9 @@ namespace IsoOnTcp
     /// can't handle this, respectively I can't handle the interface because I don't know
     /// how to use it that it can handle telegrams which are initiates by plcsim.
     /// </summary>
-    static class S7ProtoHook
+    internal static class S7ProtoHook
     {
-        static public byte[] RequestExchange(byte[] pdubytes)
+        internal static byte[] RequestExchange(byte[] pdubytes)
         {
             // At this time the only thing I want to handle is a SZL-Request of SZL ID 0x0131 Index 3 and
             // make my own response to it.
@@ -34,22 +34,22 @@ namespace IsoOnTcp
             if (pdubytes.Length == 26)
             {
                 // 2. Check Header
-                header_ok = (pdubytes[0] == 0x32 && pdubytes[1] == 0x07 &&      // Protocol ID, Userdata
+                header_ok = pdubytes[0] == 0x32 && pdubytes[1] == 0x07 &&      // Protocol ID, Userdata
                         pdubytes[6] == 0x00 && pdubytes[7] == 0x08 &&           // Length of Parameter is 8 bytes
-                        pdubytes[8] == 0x00 && pdubytes[9] == 0x08);            // Length of data is 8 bytes
+                        pdubytes[8] == 0x00 && pdubytes[9] == 0x08;            // Length of data is 8 bytes
 
                 if (header_ok)
                 {
                     // 3. Check parameter
-                    parameter_ok = (pdubytes[10] == 0x00 && pdubytes[11] == 0x01 && pdubytes[12] == 0x12 &&
+                    parameter_ok = pdubytes[10] == 0x00 && pdubytes[11] == 0x01 && pdubytes[12] == 0x12 &&
                         pdubytes[13] == 0x04 && pdubytes[14] == 0x11 && pdubytes[15] == 0x44 &&
-                        pdubytes[16] == 0x01 && pdubytes[17] == 0x00);
+                        pdubytes[16] == 0x01 && pdubytes[17] == 0x00;
 
                     if (parameter_ok)
                     {
                         // 4. Check data
-                        data_ok = (pdubytes[18] == 0xff && pdubytes[19] == 0x09 &&
-                            pdubytes[20] == 0x00 && pdubytes[21] == 0x04);
+                        data_ok = pdubytes[18] == 0xff && pdubytes[19] == 0x09 &&
+                            pdubytes[20] == 0x00 && pdubytes[21] == 0x04;
 
                         if (data_ok)
                         {
@@ -94,8 +94,12 @@ namespace IsoOnTcp
             return null;
         }
 
-        // Get LED states (are faked, RUN LED is always on
-        static public byte[] GetSzlId0x0074_response(ref byte[] pdubytes)
+        /// <summary>
+        /// Get LED states (are faked, RUN LED is always on
+        /// </summary>
+        /// <param name="pdubytes"></param>
+        /// <returns></returns>
+        internal static byte[] GetSzlId0x0074_response(ref byte[] pdubytes)
         {
             byte[] szl_id0074_idx0_response = new byte[]
             {
@@ -129,8 +133,12 @@ namespace IsoOnTcp
             return szl_id0074_idx0_response;
         }
 
-        // Get only header informations
-        static public byte[] GetSzlId0x0f74_idx0_response(ref byte[] pdubytes)
+        /// <summary>
+        /// Get only header informations
+        /// </summary>
+        /// <param name="pdubytes"></param>
+        /// <returns></returns>
+        internal static byte[] GetSzlId0x0f74_idx0_response(ref byte[] pdubytes)
         {
             byte[] szl_id0f74_idx0_response = new byte[]
             {
@@ -158,8 +166,13 @@ namespace IsoOnTcp
             return szl_id0f74_idx0_response;
         }
 
-        // Get specific LED state
-        static public byte[] GetSzlId0x0174_response(short szl_index, ref byte[] pdubytes)
+        /// <summary>
+        /// Get specific LED state
+        /// </summary>
+        /// <param name="szl_index"></param>
+        /// <param name="pdubytes"></param>
+        /// <returns></returns>
+        internal static byte[] GetSzlId0x0174_response(short szl_index, ref byte[] pdubytes)
         {
             byte[] szl_id0174_response = new byte[]
             {
@@ -193,7 +206,8 @@ namespace IsoOnTcp
             // Answer only the LEDs as answered in the other requested,
             // otherwise pass it to PLCSIM
             if (szl_index == 0x01 || szl_index == 0x04 || szl_index == 0x05 ||
-                szl_index == 0x06 || szl_index == 0x0b || szl_index == 0x0c) {
+                szl_index == 0x06 || szl_index == 0x0b || szl_index == 0x0c)
+            {
 
                 // set only RUN LED on
                 if (szl_index == 4)
@@ -205,7 +219,7 @@ namespace IsoOnTcp
             return null;
         }
 
-        static public byte[] GetSzlId0131_idx3_response(ref byte[] pdubytes)
+        internal static byte[] GetSzlId0131_idx3_response(ref byte[] pdubytes)
         {
             byte[] szl_id0131_idx3_response = new byte[]
             {
@@ -243,7 +257,7 @@ namespace IsoOnTcp
             return szl_id0131_idx3_response;
         }
 
-        static public byte[] GetSzlId0x0011_response(ref byte[] pdubytes)
+        internal static byte[] GetSzlId0x0011_response(ref byte[] pdubytes)
         {
             byte[] szl_id0011_response = new byte[]
             {
@@ -284,7 +298,7 @@ namespace IsoOnTcp
             return szl_id0011_response;
         }
 
-        static public byte[] GetSzlId0x001c_response(ref byte[] pdubytes)
+        internal static byte[] GetSzlId0x001c_response(ref byte[] pdubytes)
         {
             // Attention! This telegram needs a 480 bytes PDU if used!
             byte[] szl_id001c_response = new byte[]
@@ -341,7 +355,7 @@ namespace IsoOnTcp
             return szl_id001c_response;
         }
 
-        static public void ResponseExchange(ref byte[] pdubytes)
+        internal static void ResponseExchange(ref byte[] pdubytes)
         {
             // Look into PLCSIM response for data we have to modify.
             // At this time this is the response to communication setup response, where PLCSIM answers
@@ -352,14 +366,14 @@ namespace IsoOnTcp
             if (pdubytes.Length == 20)
             {
                 // 2. Check Header
-                header_ok = (pdubytes[0] == 0x32 && pdubytes[1] == 0x03 &&      // Protocol ID, Ackdata
+                header_ok = pdubytes[0] == 0x32 && pdubytes[1] == 0x03 &&      // Protocol ID, Ackdata
                         pdubytes[6] == 0x00 && pdubytes[7] == 0x08 &&           // Length of Parameter is 8 bytes
-                        pdubytes[8] == 0x00 && pdubytes[9] == 0x00);            // Length of data is 0 bytes
+                        pdubytes[8] == 0x00 && pdubytes[9] == 0x00;            // Length of data is 0 bytes
 
                 if (header_ok)
                 {
                     // 3. Check parameter
-                    parameter_ok = (pdubytes[12] == 0xf0);
+                    parameter_ok = pdubytes[12] == 0xf0;
 
                     if (parameter_ok)
                     {

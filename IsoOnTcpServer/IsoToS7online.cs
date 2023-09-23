@@ -13,31 +13,63 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
+
 using PlcsimS7online;
+
 using TcpLib;
 
 namespace IsoOnTcp
 {
     public class IsoToS7online : IDisposable
     {
-        public Action<byte[]> DataReceived;
+        #region Field
 
         private TcpServer m_Server;
         private IsoServiceProvider m_Provider;
-        private bool m_enableTsapCheck;
+        private readonly bool m_enableTsapCheck;
         private bool m_Disposed = false;
-        public Queue<QueueEntry> m_ReceiveQueue = new Queue<QueueEntry>(100);
-        public Queue<QueueEntry> m_SendQueue = new Queue<QueueEntry>(100);
+        private readonly Queue<QueueEntry> m_ReceiveQueue = new Queue<QueueEntry>(100);
+        private readonly Queue<QueueEntry> m_SendQueue = new Queue<QueueEntry>(100);
         private IPAddress m_NetworkIpAdress;
+
+        #endregion
+
+        #region Event
+
+        /// <summary>
+        /// delegate an event for monitor output
+        /// </summary>
+        /// <param name="sourceIP"></param>
+        /// <param name="data"></param>
+        /// <param name="message"></param>
+        public delegate void MonitorDataReceived(string sourceIP, byte[] data, string message);
+
+        public event MonitorDataReceived monitorDataReceived;
+
+        public Action<byte[]> DataReceived;
+
+        #endregion
+
+        #region Property
+
+        public string Name => m_Provider.m_Name;
+        public IPAddress NetworkIpAdress => m_NetworkIpAdress;
+
+        #endregion
+
+        #region Constructor
 
         public IsoToS7online(bool enableTsapCheck)
         {
             m_enableTsapCheck = enableTsapCheck;
         }
+
+        #endregion
+
+        #region Public Method
 
         // JYB: void -> bool
         public bool start(string name, IPAddress networkIpAdress, List<byte[]> tsaps, IPAddress plcsimIp, int plcsimRackNumber, int plcsimSlotNumber, ref string error)
@@ -54,7 +86,7 @@ namespace IsoOnTcp
 
             m_Server = new TcpServer(m_Provider, 102);
             // m_Server.Start(m_NetworkIpAdress);
-            var ret = m_Server.Start(m_NetworkIpAdress, ref error);
+            bool ret = m_Server.Start(m_NetworkIpAdress, ref error);
             return ret;
         }
 
@@ -64,8 +96,78 @@ namespace IsoOnTcp
             m_Server = null;
         }
 
-        public string Name { get { return m_Provider.m_Name; } }
-        public IPAddress NetworkIpAdress { get { return m_NetworkIpAdress; } }
+        internal void IsoReceived(IsoServiceProvider client, byte[] data)
+        {
+            // Skip empty messages
+            if (data.Length < 1)
+            {
+                return;
+            }
+
+            // On the first S7 protocol telegram, determine the Plcsim version which has to be used
+            // by checking the protocol type in S7 protocol header
+            // 0x32 = S7comm
+            // 0x72 = S7commPlus (1200/1500)
+            if (client.m_S7ProtocolVersionDetected == false)
+            {
+                string message = string.Empty;
+                bool plcsim_success = false;
+                if (data[0] == 0x72)
+                {
+                    plcsim_success = client.InitPlcsim(PlcSimProtocolType.S7commPlus);
+                    message = "Connecting to Plcsim using S7Comm-Plus mode for 1200/1500";
+                }
+                else
+                {
+                    plcsim_success = client.InitPlcsim(PlcSimProtocolType.S7comm);
+                    message = "Connecting to Plcsim using S7Comm mode for 300/400 or 1200/1500 (not optimized)";
+                }
+                if (plcsim_success == false)
+                {
+                    if (monitorDataReceived != null)
+                    {
+                        monitorDataReceived(client.client.RemoteEndPoint.ToString(), null, "Failed to connect to Plcsim");
+                    }
+                    client.client.EndConnection();
+                    return;
+                }
+                if (monitorDataReceived != null)
+                {
+                    monitorDataReceived(client.client.RemoteEndPoint.ToString(), null, message);
+                }
+                client.m_S7ProtocolVersionDetected = true;
+            }
+
+            PlcS7onlineMsgPump.WndProcMessage msg = new PlcS7onlineMsgPump.WndProcMessage
+            {
+                pdu = data,
+                pdulength = data.Length
+            };
+
+            if (monitorDataReceived != null)
+            {
+                monitorDataReceived(client.client.RemoteEndPoint.ToString(), data, string.Empty);
+            }
+            byte[] res = null;
+
+            // Test if we have to generate our own answer
+            res = S7ProtoHook.RequestExchange(data);
+            if (res == null)
+            {
+                client.SendDataToPlcsim(msg);
+            }
+            else
+            {
+                client.IsoSend(client.client, res);
+            }
+
+            // JYB
+            DataReceived?.Invoke(data);
+        }
+
+        #endregion
+
+        #region IDisposable Impl
 
         private void Dispose(bool disposing)
         {
@@ -91,98 +193,46 @@ namespace IsoOnTcp
             GC.SuppressFinalize(this);
         }
 
-        public void IsoReceived(IsoServiceProvider client, byte[] data)
-        {
-            // Skip empty messages
-            if (data.Length < 1) return;
-
-            // On the first S7 protocol telegram, determine the Plcsim version which has to be used
-            // by checking the protocol type in S7 protocol header
-            // 0x32 = S7comm
-            // 0x72 = S7commPlus (1200/1500)
-            if (client.m_S7ProtocolVersionDetected == false)
-            {
-                string message = String.Empty;
-                bool plcsim_success = false;
-                if (data[0] == 0x72)
-                {
-                    plcsim_success = client.InitPlcsim(PlcsimProtocolType.S7commPlus);
-                    message = "Connecting to Plcsim using S7Comm-Plus mode for 1200/1500";
-                }
-                else
-                {
-                    plcsim_success = client.InitPlcsim(PlcsimProtocolType.S7comm);
-                    message = "Connecting to Plcsim using S7Comm mode for 300/400 or 1200/1500 (not optimized)";
-                }
-                if (plcsim_success == false)
-                {
-                    if (monitorDataReceived != null)
-                    {
-                        monitorDataReceived(client.client.RemoteEndPoint.ToString(), null, "Failed to connect to Plcsim");
-                    }
-                    client.client.EndConnection();
-                    return;
-                }
-                if (monitorDataReceived != null)
-                {
-                    monitorDataReceived(client.client.RemoteEndPoint.ToString(), null, message);
-                }
-                client.m_S7ProtocolVersionDetected = true;
-            }
-
-            PlcS7onlineMsgPump.WndProcMessage msg = new PlcS7onlineMsgPump.WndProcMessage();
-            msg.pdu = data;
-            msg.pdulength = data.Length;
-
-            if (monitorDataReceived != null)
-            {
-                monitorDataReceived(client.client.RemoteEndPoint.ToString(), data, String.Empty);
-            }
-            byte[] res = null;
-
-            // Test if we have to generate our own answer
-            res = S7ProtoHook.RequestExchange(data);
-            if (res == null)
-            {
-                client.SendDataToPlcsim(msg);
-            }
-            else
-            {
-                client.IsoSend(client.client, res);
-            }
-
-            // JYB
-            DataReceived?.Invoke(data);
-        }
-
-        // delegate an event for monitor output
-        public delegate void dataReceived(string sourceIP, byte[] data, string message);
-        public event dataReceived monitorDataReceived;
+        #endregion
     }
 
-    public class QueueEntry
+    internal class QueueEntry
     {
         public IsoServiceProvider isoclient;
         public ConnectionState client;
         public byte[] message;
     }
 
-    public enum PlcsimProtocolType
+    internal enum PlcSimProtocolType
     {
-        S7comm = 0,             // Used for Step7 V5 Plcsim, and TIA-Plcsim for 1200/1500 when using absolute address mode (put/get) -> 0x32 protocol header
-        S7commPlus              // Used for TIA-Plcsimusing new protocol used for 120071500 -> 0x72 protocol header
+        /// <summary>
+        /// Used for Step7 V5 Plcsim, and TIA-Plcsim for 1200/1500 when using absolute address mode (put/get) -> 0x32 protocol header
+        /// </summary>
+        S7comm = 0,
+
+        /// <summary>
+        /// Used for TIA-Plcsimusing new protocol used for 120071500 -> 0x72 protocol header
+        /// </summary>
+        S7commPlus
     }
 
-    public class IsoServiceProvider : TcpServiceProvider
+    internal class IsoServiceProvider : TcpServiceProvider
     {
+        #region PInvoke 
+
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern int SendMessage(IntPtr hwnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+        public static extern int SendMessage(IntPtr hwnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        #endregion
+
+        #region Field
+
 
         public PlcS7onlineMsgPump m_PlcS7onlineMsgPump;
-        IntPtr m_PlcS7onlineMsgPump_Handle;
-        AutoResetEvent m_autoEvent_MsgPumpThreadStart;
-        AutoResetEvent m_autoEvent_ConnectPlcsim;
-        bool m_ConnectPlcsimSuccess;
+        private IntPtr m_PlcS7onlineMsgPump_Handle;
+        private AutoResetEvent m_autoEvent_MsgPumpThreadStart;
+        private AutoResetEvent m_autoEvent_ConnectPlcsim;
+        private bool m_ConnectPlcsimSuccess;
         public int m_PlcsimRackNumber;
         public int m_PlcsimSlotNumber;
         public IPAddress m_PlcsimIpAdress;
@@ -192,10 +242,14 @@ namespace IsoOnTcp
         public ISOonTCP ISOsrv = new ISOonTCP();
         public ConnectionState client;
 
+        #endregion
+
+        #region Constructor
+
         public IsoServiceProvider()
         {
-            ISOsrv.Log = this.IsoLog;
-            ISOsrv.TCPSend = this.TCPSend;
+            ISOsrv.OnLog = this.IsoLog;
+            ISOsrv.OnTCPSend = this.TCPSend;
             m_PlcS7onlineMsgPump_Handle = IntPtr.Zero;
         }
 
@@ -204,18 +258,9 @@ namespace IsoOnTcp
             ExitPlcsimMessagePump();
         }
 
-        public void IsoLog(string message)
-        {
-        }
+        #endregion
 
-        public void TCPSend(ConnectionState state, byte[] data)
-        {
-            client = state;
-            if (!client.Write(data, 0, data.Length))
-            {
-                client.EndConnection();
-            }
-        }
+        #region Public Method
 
         public void IsoSend(ConnectionState state, byte[] data)
         {
@@ -313,12 +358,7 @@ namespace IsoOnTcp
             client = state;
         }
 
-        private void ExitPlcsimMessagePump()
-        {
-            SendMessage(m_PlcS7onlineMsgPump_Handle, PlcS7onlineMsgPump.WM_M_EXIT, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        public bool InitPlcsim(PlcsimProtocolType plcsimVersion)
+        public bool InitPlcsim(PlcSimProtocolType plcsimVersion)
         {
             m_autoEvent_MsgPumpThreadStart = new AutoResetEvent(false);
             StartPlcS7onlineMsgPump(plcsimVersion);
@@ -339,7 +379,7 @@ namespace IsoOnTcp
 
         public void SendDataToPlcsim(PlcS7onlineMsgPump.WndProcMessage msg)
         {
-            Int32 length = msg.pdu.Length + 4;
+            int length = msg.pdu.Length + 4;
             byte[] buffer = new byte[length];
 
             byte[] pduLengthBytes = BitConverter.GetBytes(msg.pdulength);
@@ -354,10 +394,10 @@ namespace IsoOnTcp
             Marshal.FreeHGlobal(ptr);
         }
 
-        public void StartPlcS7onlineMsgPump(PlcsimProtocolType plcsimVersion)
+        public void StartPlcS7onlineMsgPump(PlcSimProtocolType plcsimVersion)
         {
             Thread PlcS7onlineMsgPumpThread = new Thread(StartPlcS7onlineMsgPumpThread);
-            if (plcsimVersion == PlcsimProtocolType.S7commPlus)
+            if (plcsimVersion == PlcSimProtocolType.S7commPlus)
             {
                 m_PlcS7onlineMsgPump = new PlcS7onlineMsgPumpTia(m_PlcsimIpAdress, m_PlcsimRackNumber, m_PlcsimSlotNumber);
             }
@@ -369,12 +409,39 @@ namespace IsoOnTcp
             PlcS7onlineMsgPumpThread.Start();
         }
 
+        #endregion
+
+        #region Private Method
+       
+        private void ExitPlcsimMessagePump()
+        {
+            SendMessage(m_PlcS7onlineMsgPump_Handle, PlcS7onlineMsgPump.WM_M_EXIT, IntPtr.Zero, IntPtr.Zero);
+        }
+
         private void StartPlcS7onlineMsgPumpThread()
         {
             m_PlcS7onlineMsgPump_Handle = m_PlcS7onlineMsgPump.Handle;
             m_autoEvent_MsgPumpThreadStart.Set();
             m_PlcS7onlineMsgPump.Run();
         }
+
+        #endregion
+
+        #region Event Handler
+
+        public void IsoLog(string message)
+        {
+        }
+
+        public void TCPSend(ConnectionState state, byte[] data)
+        {
+            client = state;
+            if (!client.Write(data, 0, data.Length))
+            {
+                client.EndConnection();
+            }
+        }
+
 
         private void OnDataFromPlcsimReceived(PlcS7onlineMsgPump.MessageFromPlcsim message)
         {
@@ -399,5 +466,7 @@ namespace IsoOnTcp
                     //System.Diagnostics.Debug.Print("OnDataFromPlcsimReceived(): Type=" + message.type.ToString() + " Message=" + message.textmessage);
             }
         }
+
+        #endregion
     }
 }

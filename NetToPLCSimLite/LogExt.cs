@@ -1,24 +1,21 @@
-﻿using log4net;
-using log4net.Appender;
+﻿using System.Reflection;
+
+using log4net;
 using log4net.Repository.Hierarchy;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NetToPLCSimLite
 {
     public static class LogExt
     {
-        #region Fields
+        #region Field
+
         public static ILog log;
+
         #endregion
 
         static LogExt()
         {
-            var hierarchy = (Hierarchy)LogManager.GetRepository(Assembly.GetEntryAssembly());
+            Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository(Assembly.GetEntryAssembly());
 
             //var pattern = new log4net.Layout.PatternLayout("[ %date ] [ %-5level ] %message %exception%newline");
             //pattern.ActivateOptions();

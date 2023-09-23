@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+
 using ConsoleTableExt;
+
 using IsoOnTcp;
+
 using log4net;
+
 using NetToPLCSimLite.Helpers;
 using NetToPLCSimLite.Models;
 
@@ -18,27 +19,34 @@ namespace NetToPLCSimLite.Services
 {
     public class S7PlcSimService : IDisposable
     {
-        #region Fields
+        #region Field
         public event EventHandler<string> PlcSimErr;
 
         private readonly ILog log = LogExt.log;
         private readonly ConcurrentDictionary<string, IsoToS7online> s7ServerList = new ConcurrentDictionary<string, IsoToS7online>();
+
         #endregion
 
-        #region Properties
+        #region Property
+
         public List<S7Protocol> PlcSimList { get; } = new List<S7Protocol>();
+        
         #endregion
 
-        #region Public Methods
+        #region Public Method
+
         public bool GetS7Port()
         {
-            var ret = false;
+            bool ret = false;
             try
             {
                 log.Info($"START, Get S7 Port.");
-                var service = new S7ServiceHelper();
-                var s7svc = service.FindS7Service();
-                if (s7svc == null) throw new NullReferenceException();
+                S7ServiceHelper service = new S7ServiceHelper();
+                System.ServiceProcess.ServiceController s7svc = service.FindS7Service();
+                if (s7svc == null)
+                {
+                    throw new NullReferenceException();
+                }
 
                 ret = service.IsPortAvailable(CONST.S7_PORT);
                 if (!ret)
@@ -69,8 +77,14 @@ namespace NetToPLCSimLite.Services
             }
             finally
             {
-                if (ret) log.Info($"OK, Get S7 Port.");
-                else log.Warn($"NG, Get S7 Port.");
+                if (ret)
+                {
+                    log.Info($"OK, Get S7 Port.");
+                }
+                else
+                {
+                    log.Warn($"NG, Get S7 Port.");
+                }
             }
             return ret;
         }
@@ -80,42 +94,50 @@ namespace NetToPLCSimLite.Services
             try
             {
                 log.Debug($"=== Received S7 PLCSim List ===");
-                var adding = new List<S7Protocol>();
-                var original = new List<S7Protocol>();
+                List<S7Protocol> adding = new List<S7Protocol>();
+                List<S7Protocol> original = new List<S7Protocol>();
                 if (list != null)
                 {
-                    foreach (var plc in list)
+                    foreach (S7Protocol plc in list)
                     {
                         original.Add(plc);
-                        var exist = PlcSimList.FirstOrDefault(x => x.Ip == plc.Ip);
-                        if (exist == null) adding.Add(plc);
+                        S7Protocol exist = PlcSimList.FirstOrDefault(x => x.Ip == plc.Ip);
+                        if (exist == null)
+                        {
+                            adding.Add(plc);
+                        }
+
                         log.Debug(plc.ToString());
                     }
                 }
                 log.Debug("==============================");
 
                 log.Debug($"=== Before S7 PLCSim List ===");
-                var removing = new List<S7Protocol>();
-                foreach (var plc in PlcSimList)
+                List<S7Protocol> removing = new List<S7Protocol>();
+                foreach (S7Protocol plc in PlcSimList)
                 {
-                    var exist = original.FirstOrDefault(x => x.Ip == plc.Ip);
-                    if (exist == null) removing.Add(plc);
+                    S7Protocol exist = original.FirstOrDefault(x => x.Ip == plc.Ip);
+                    if (exist == null)
+                    {
+                        removing.Add(plc);
+                    }
+
                     log.Debug(plc.ToString());
                 }
                 log.Debug("==============================");
 
                 if (adding.Count > 0)
                 {
-                    var ret = AddStation(adding);
+                    List<S7Protocol> ret = AddStation(adding);
                     PlcSimList.AddRange(ret);
                 }
 
                 if (removing.Count > 0)
                 {
-                    var ret = RemoveStation(removing);
+                    List<S7Protocol> ret = RemoveStation(removing);
                     for (int i = 0; i < ret.Count; i++)
                     {
-                        var item = ret[i];
+                        S7Protocol item = ret[i];
                         PlcSimList.Remove(item);
                         item = null;
                     }
@@ -128,7 +150,7 @@ namespace NetToPLCSimLite.Services
             finally
             {
                 log.Debug($"=== After S7 PLCSim List ===");
-                foreach (var item in PlcSimList)
+                foreach (S7Protocol item in PlcSimList)
                 {
                     log.Debug(item.ToString());
                 }
@@ -144,7 +166,7 @@ namespace NetToPLCSimLite.Services
             {
                 lock (PlcSimList)
                 {
-                    var sb = new StringBuilder($"{Environment.NewLine}CURRENT [PLCSIM] LIST ( {PlcSimList.Count} ):{Environment.NewLine}");
+                    StringBuilder sb = new StringBuilder($"{Environment.NewLine}CURRENT [PLCSIM] LIST ( {PlcSimList.Count} ):{Environment.NewLine}");
                     if (PlcSimList.Count > 0)
                     {
                         sb.Append(ConsoleTableBuilder.From(PlcSimList).WithFormat(ConsoleTableBuilderFormat.MarkDown).Export().ToString());
@@ -157,20 +179,26 @@ namespace NetToPLCSimLite.Services
                 throw;
             }
         }
+
         #endregion
 
-        #region Private Methods
+        #region Private Method
+
         private List<S7Protocol> AddStation(IReadOnlyCollection<S7Protocol> adding)
         {
-            var ret = new List<S7Protocol>();
-            if (adding == null) return ret;
+            List<S7Protocol> ret = new List<S7Protocol>();
+            if (adding == null)
+            {
+                return ret;
+            }
+
             try
             {
                 log.Info($"=== Adding S7 PLCSim List ===");
-                foreach (var item in adding)
+                foreach (S7Protocol item in adding)
                 {
-                    var tsaps = new List<byte[]>();
-                    byte tsap2 = (byte)(item.Rack << 4 | item.Slot);
+                    List<byte[]> tsaps = new List<byte[]>();
+                    byte tsap2 = (byte)((item.Rack << 4) | item.Slot);
                     tsaps.Add(new byte[] { 0x01, tsap2 });
                     tsaps.Add(new byte[] { 0x02, tsap2 });
                     tsaps.Add(new byte[] { 0x03, tsap2 });
@@ -179,12 +207,12 @@ namespace NetToPLCSimLite.Services
                     try
                     {
                         srv = new IsoToS7online(false);
-                        var ip = IPAddress.Parse(item.Ip);
-                        var err = string.Empty;
-                        var srvStart = srv.start(item.Name, ip, tsaps, ip, item.Rack, item.Slot, ref err);
+                        IPAddress ip = IPAddress.Parse(item.Ip);
+                        string err = string.Empty;
+                        bool srvStart = srv.start(item.Name, ip, tsaps, ip, item.Rack, item.Slot, ref err);
                         if (srvStart)
                         {
-                            var conn = item.Connect();
+                            bool conn = item.Connect();
                             if (conn)
                             {
                                 srv.DataReceived = item.DataReceived;
@@ -204,7 +232,9 @@ namespace NetToPLCSimLite.Services
                             }
                         }
                         else
+                        {
                             log.Warn($"NG({err}), {item.ToString()}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -225,12 +255,16 @@ namespace NetToPLCSimLite.Services
 
         private List<S7Protocol> RemoveStation(IReadOnlyCollection<S7Protocol> removing)
         {
-            var ret = new List<S7Protocol>();
-            if (removing == null) return ret;
+            List<S7Protocol> ret = new List<S7Protocol>();
+            if (removing == null)
+            {
+                return ret;
+            }
+
             try
             {
                 log.Info($"=== Removing S7 PLCSim List ===");
-                foreach (var item in removing)
+                foreach (S7Protocol item in removing)
                 {
                     try
                     {
@@ -261,10 +295,14 @@ namespace NetToPLCSimLite.Services
         private void ErrorHandler(string ip)
         {
             // Return
-            if (string.IsNullOrEmpty(ip)) return;
+            if (string.IsNullOrEmpty(ip))
+            {
+                return;
+            }
+
             lock (PlcSimList)
             {
-                var error = PlcSimList.FirstOrDefault(x => !x.IsConnected && x.Ip == ip);
+                S7Protocol error = PlcSimList.FirstOrDefault(x => !x.IsConnected && x.Ip == ip);
                 if (error != null && s7ServerList.TryRemove(error.Ip, out IsoToS7online srv))
                 {
                     srv?.Dispose();
@@ -277,9 +315,11 @@ namespace NetToPLCSimLite.Services
                 error = null;
             }
         }
+        
         #endregion
 
         #region IDisposable Support
+
         private bool disposedValue = false; // 중복 호출을 검색하려면
 
         protected virtual void Dispose(bool disposing)
@@ -313,6 +353,7 @@ namespace NetToPLCSimLite.Services
             // TODO: 위의 종료자가 재정의된 경우 다음 코드 줄의 주석 처리를 제거합니다.
             // GC.SuppressFinalize(this);
         }
+        
         #endregion
     }
 }

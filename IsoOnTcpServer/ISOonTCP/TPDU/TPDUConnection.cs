@@ -12,10 +12,9 @@
  /*********************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections;
+using System.Collections.Generic;
+
 using HexDumping;
 
 namespace IsoOnTcp
@@ -24,38 +23,122 @@ namespace IsoOnTcp
     /// Handles TPDUs of type CR (connect request) or CC (connect confirm)
     /// </summary>
     ///
-    public enum VP
+    internal enum VP
     {
-        ACK_TIME     	= 0x85,         // 1000 0101 Acknowledge Time
-        RES_ERROR    	= 0x86,         // 1000 0110 Residual Error Rate
-        PRIORITY     	= 0x87,         // 1000 0111 Priority
-        TRANSIT_DEL  	= 0x88,         // 1000 1000 Transit Delay
-        THROUGHPUT   	= 0x89,         // 1000 1001 Throughput
-        SEQ_NR       	= 0x8A,         // 1000 1010 Subsequence Number (in AK)
-        REASSIGNMENT 	= 0x8B,         // 1000 1011 Reassignment Time
-        FLOW_CNTL    	= 0x8C,         // 1000 1100 Flow Control Confirmation (in AK)
-        TPDU_SIZE    	= 0xC0,         // 1100 0000 TPDU Size
-        SRC_TSAP     	= 0xC1,         // 1100 0001 TSAP-ID / calling TSAP ( in CR/CC )
-        DST_TSAP     	= 0xC2,         // 1100 0010 TSAP-ID / called TSAP
-        CHECKSUM     	= 0xC3,         // 1100 0011 Checksum
-        VERSION_NR   	= 0xC4,         // 1100 0100 Version Number
-        PROTECTION   	= 0xC5,         // 1100 0101 Protection Parameters (user defined)
-        OPT_SEL      	= 0xC6,         // 1100 0110 Additional Option Selection
-        PROTO_CLASS  	= 0xC7,         // 1100 0111 Alternative Protocol Classes
+        /// <summary>
+        /// 1000 0101 Acknowledge Time
+        /// </summary>
+        ACK_TIME = 0x85,
+
+        /// <summary>
+        /// 1000 0110 Residual Error Rate
+        /// </summary>
+        RES_ERROR = 0x86,
+
+        /// <summary>
+        /// 1000 0111 Priority
+        /// </summary>
+        PRIORITY = 0x87,
+
+        /// <summary>
+        /// 1000 1000 Transit Delay
+        /// </summary>
+        TRANSIT_DEL = 0x88,
+
+        /// <summary>
+        /// 1000 1001 Throughput
+        /// </summary>
+        THROUGHPUT = 0x89,
+
+        /// <summary>
+        /// 1000 1010 Subsequence Number (in AK)
+        /// </summary>
+        SEQ_NR = 0x8A,
+
+        /// <summary>
+        /// 1000 1011 Reassignment Time
+        /// </summary>
+        REASSIGNMENT = 0x8B,
+
+        /// <summary>
+        /// 1000 1100 Flow Control Confirmation (in AK)
+        /// </summary>
+        FLOW_CNTL = 0x8C,
+
+        /// <summary>
+        /// 1100 0000 TPDU Size
+        /// </summary>
+        TPDU_SIZE = 0xC0,
+
+        /// <summary>
+        /// 1100 0001 TSAP-ID / calling TSAP ( in CR/CC )
+        /// </summary>
+        SRC_TSAP = 0xC1,
+
+        /// <summary>
+        /// 1100 0010 TSAP-ID / called TSAP
+        /// </summary>
+        DST_TSAP = 0xC2,
+
+        /// <summary>
+        /// 1100 0011 Checksum
+        /// </summary>
+        CHECKSUM = 0xC3,
+
+        /// <summary>
+        /// 1100 0100 Version Number
+        /// </summary>
+        VERSION_NR = 0xC4,
+
+        /// <summary>
+        /// 1100 0101 Protection Parameters (user defined)
+        /// </summary>
+        PROTECTION = 0xC5,
+
+        /// <summary>
+        /// 1100 0110 Additional Option Selection
+        /// </summary>
+        OPT_SEL = 0xC6,
+
+        /// <summary>
+        /// 1100 0111 Alternative Protocol Classes
+        /// </summary>
+        PROTO_CLASS = 0xC7,
+
         PREF_MAX_TPDU_SIZE = 0xF0,
+
         INACTIVITY_TIMER = 0xF2,
-        ADDICC          = 0xe0          // 1110 0000 Additional Information on Connection Clearing
+
+        /// <summary>
+        /// 1110 0000 Additional Information on Connection Clearing
+        /// </summary>
+        ADDICC = 0xe0
     }
 
-    public struct VarParam : IComparable
+    internal struct VarParam : IComparable
     {
-        public byte code;           // Parameter Code, 1 Byte
-        public byte length;         // Parameter Length, 1 Byte
-        public byte[] value;        // Parameter Value, n Byte(s)
+        #region Field
 
-        public override bool Equals(Object obj)
+        /// <summary>
+        /// Parameter Code, 1 Byte
+        /// </summary>
+        public byte code;
+
+        /// <summary>
+        /// Parameter Length, 1 Byte
+        /// </summary>
+        public byte length;
+
+        /// <summary>
+        /// Parameter Value, n Byte(s)
+        /// </summary>
+        public byte[] value;
+
+        #endregion
+
+        public override bool Equals(object obj)
         {
-            return (this.code == (byte)obj);
+            return this.code == (byte)obj;
         }
 
         public override int GetHashCode()
@@ -63,27 +146,58 @@ namespace IsoOnTcp
             return base.GetHashCode();
         }
 
-        public int CompareTo(Object obj)
+        public int CompareTo(object obj)
         {
             byte v = (byte)obj;
             if (this.code < v)
+            {
                 return -1;
+            }
             else if (this.code > v)
+            {
                 return 1;
+            }
             else
+            {
                 return 0;
+            }
         }
     }
 
-    public class TPDUConnection
+    internal class TPDUConnection
     {
+        #region Field
+
         public const int MAX_TSAP_LEN = 32;
 
-        public UInt16 DstRef;       // Destination reference, 2 Bytes
-        public UInt16 SrcRef;       // Source reference, 2 Bytes
-        public int ClassOption;     // Class Option, 1 Byte
-        ArrayList Varpart;          // Variable part
-        private int MaxTPDUSize;    // Allowed sizes: 128(7), 256(8), 512(9), 1024(10), 2048(11) octets
+        /// <summary>
+        /// Destination reference, 2 Bytes
+        /// </summary>
+        public ushort DstRef;
+
+        /// <summary>
+        /// Source reference, 2 Bytes
+        /// </summary>
+        public ushort SrcRef;
+
+        /// <summary>
+        /// Class Option, 1 Byte
+        /// </summary>
+        public int ClassOption;
+
+        /// <summary>
+        /// Variable part
+        /// </summary>
+        private ArrayList Varpart;
+
+        /// <summary>
+        /// Allowed sizes: 128(7), 256(8), 512(9), 1024(10), 2048(11) octets
+        /// </summary>
+        private int MaxTPDUSize;
+
+        #endregion
+
+        #region Constructor
 
         public TPDUConnection()
         { }
@@ -95,7 +209,9 @@ namespace IsoOnTcp
             TPDU.TPDU_TYPES type = (TPDU.TPDU_TYPES)(packet[1] >> 4);
 
             if ((type != TPDU.TPDU_TYPES.CR) && (type != TPDU.TPDU_TYPES.CC))
+            {
                 throw new ApplicationException("TPDU: This can only handle CC/CR TDPUs");
+            }
 
             if (BitConverter.IsLittleEndian)
             {
@@ -108,9 +224,11 @@ namespace IsoOnTcp
                 SrcRef = BitConverter.ToUInt16(packet, 4);
             }
 
-            ClassOption = ((packet[6] & 0xf0) >> 4);
+            ClassOption = (packet[6] & 0xf0) >> 4;
             if (ClassOption > 4)
+            {
                 throw new Exception("TPDU: Class option number not allowed.");
+            }
 
             pos = 7;
             // read variable part
@@ -119,8 +237,10 @@ namespace IsoOnTcp
             {
                 while (pos < li)
                 {
-                    VarParam vp = new VarParam();
-                    vp.code = packet[pos];
+                    VarParam vp = new VarParam
+                    {
+                        code = packet[pos]
+                    };
                     pos += 1;
                     vp.length = packet[pos];
                     pos += 1;
@@ -136,8 +256,16 @@ namespace IsoOnTcp
             }
         }
 
-        // Handle connect request and build a connect confirm packet
-        public TPDUConnection HandleConnectRequest(List<byte[]> LocalTsaps, int maxTPDUSize, bool enableTsapCheck)
+        /// <summary>
+        /// Handle connect request and build a connect confirm packet
+        /// </summary>
+        /// <param name="LocalTsaps"></param>
+        /// <param name="maxTPDUSize"></param>
+        /// <param name="enableTsapCheck"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public TPDUConnection HandleConnectRequest(List<byte[]> LocalTsaps, int maxTPDUSize,
+                                                   bool enableTsapCheck)
         {
             ArrayList varpart = new ArrayList();
             TPDUConnection ccpdu = new TPDUConnection();
@@ -152,7 +280,10 @@ namespace IsoOnTcp
             // Compare Destination TSAP
             int indDstTsap = Varpart.IndexOf((byte)VP.DST_TSAP);
             if (indDstTsap < 0)
+            {
                 throw new Exception("TPDU: Missing destination tsap in connect request.");
+            }
+
             if (enableTsapCheck)
             {
                 bool validTsapFound = false;
@@ -190,7 +321,9 @@ namespace IsoOnTcp
 
             int indSrcTsap = Varpart.IndexOf((byte)VP.SRC_TSAP);
             if (indSrcTsap < 0)
+            {
                 throw new Exception("TPDU: Missing source tsap in connect request.");
+            }
 
             // Add parameters
             VarParam vp = new VarParam();
@@ -227,7 +360,14 @@ namespace IsoOnTcp
             return ccpdu;
         }
 
-        // get bytes without lenght indicator and pdu type
+        #endregion
+
+        #region Public Method
+
+        /// <summary>
+        /// get bytes without lenght indicator and pdu type
+        /// </summary>
+        /// <returns></returns>
         public byte[] GetBytes()
         {
             int len = 5; // dest-ref, src-ref, option
@@ -264,6 +404,28 @@ namespace IsoOnTcp
         {
             return MaxTPDUSize;
         }
+
+        public string GetStringDump()
+        {
+            string message;
+            message = "Source reference      : " + SrcRef + Environment.NewLine;
+            message += "Destination reference : " + DstRef + Environment.NewLine;
+            message += "Class number          : " + ClassOption + Environment.NewLine;
+            message += "---------------------" + Environment.NewLine;
+            foreach (VarParam v in Varpart)
+            {
+                message += "Var. part code   : " + v.code + " <" + ((VP)v.code).ToString() + ">" + Environment.NewLine;
+                message += "Var. part length : " + v.length + Environment.NewLine;
+                message += "Var. part value  : " + Environment.NewLine;
+                message += Utils.HexDump(v.value, v.length) + Environment.NewLine;
+                message += "---------------------" + Environment.NewLine;
+            }
+            return message;
+        }
+
+        #endregion
+
+        #region Private Method
 
         private int GetTPDUSizeIdFromOctetCount(int octetCount)
         {
@@ -312,22 +474,6 @@ namespace IsoOnTcp
             }
         }
 
-        public string GetStringDump()
-        {
-            string message;
-            message =  "Source reference      : " + SrcRef + Environment.NewLine;
-            message += "Destination reference : " + DstRef + Environment.NewLine;
-            message += "Class number          : " + ClassOption + Environment.NewLine;
-            message += "---------------------" + Environment.NewLine;
-            foreach (VarParam v in Varpart)
-            {
-                message += "Var. part code   : " + v.code + " <" + ((VP)v.code).ToString() + ">" + Environment.NewLine;
-                message += "Var. part length : " + v.length + Environment.NewLine;
-                message += "Var. part value  : " + Environment.NewLine;
-                message += Utils.HexDump(v.value, v.length) + Environment.NewLine;
-                message += "---------------------" + Environment.NewLine;
-            }
-            return message;
-        }
+        #endregion
     }
 }

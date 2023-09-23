@@ -12,16 +12,22 @@
  /*********************************************************************/
 
 using System;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Net;
 
 namespace PlcsimS7online
 {
-    public class PlcS7onlineMsgPumpTia : PlcS7onlineMsgPump
+    internal class PlcS7onlineMsgPumpTia : PlcS7onlineMsgPump
     {
-        const int SIZE_OF_USER_DATA_1 = 1024;
-        const int SEG_LENGTH_1 = 1024;
+        #region Field
+        
+        private const int SIZE_OF_USER_DATA_1 = 1024;
+        private const int SEG_LENGTH_1 = 1024;
+
+        #endregion
+
+        #region Nested Object
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
         private struct UserDataConnectionConfigTia
@@ -35,9 +41,25 @@ namespace PlcsimS7online
             public byte b06;
             public byte b07;
             public byte b08;
+
+            /// <summary>
+            /// 1st byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
             public byte destination_1;
+
+            /// <summary>
+            /// 2nd byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
             public byte destination_2;
+
+            /// <summary>
+            /// 3rd byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
             public byte destination_3;
+
+            /// <summary>
+            /// 4th byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
             public byte destination_4;
             public byte b13;
             public byte b14;
@@ -91,11 +113,19 @@ namespace PlcsimS7online
             }
         }
 
+        #endregion
+
+        #region Constructor
+
         public PlcS7onlineMsgPumpTia(IPAddress plc_ipaddress, int rack, int slot)
             : base(plc_ipaddress, rack, slot)
         {
 
         }
+
+        #endregion
+
+        #region Override Method
 
         protected override void WndProc(ref Message m)
         {
@@ -141,6 +171,10 @@ namespace PlcsimS7online
             }
         }
 
+        #endregion
+
+        #region Private Method
+
         private void ReceiveFromPlcsimAndSendBack()
         {
             int[] rec_len = new int[1];
@@ -151,7 +185,7 @@ namespace PlcsimS7online
                 if (m_connectionHandle > 0)
                 {
                     if (m_PlcsimConnectionState == PlcsimConnectionState.ConnectState1 ||
-                        m_PlcsimConnectionState == PlcsimConnectionState.ConnectState2  ||
+                        m_PlcsimConnectionState == PlcsimConnectionState.ConnectState2 ||
                         m_PlcsimConnectionState == PlcsimConnectionState.ConnectState3)
                     {
                         SendConnectErrorMessage("ERROR: Connect failed in SCP_receive at " + m_PlcsimConnectionState.ToString());
@@ -160,7 +194,7 @@ namespace PlcsimS7online
                     {
                         int errno = SCP_get_errno();
                         string errtxt = GetErrTxt(errno);
-                        SendErrorMessage("ERROR: SCP_receive() failed. m_connectionHandle = " + m_connectionHandle + " SCP_get_errno=" + errno + " (" + errtxt +")");
+                        SendErrorMessage("ERROR: SCP_receive() failed. m_connectionHandle = " + m_connectionHandle + " SCP_get_errno=" + errno + " (" + errtxt + ")");
                     }
                 }
                 ExitThisThread();
@@ -194,7 +228,11 @@ namespace PlcsimS7online
 
         private void SendDataToPlcsim(WndProcMessage msg)
         {
-            if (++m_user >= 32000) m_user = 1;
+            if (++m_user >= 32000)
+            {
+                m_user = 1;
+            }
+
             S7OexchangeBlock snd = GetNewS7OexchangeBlock(user: 0, rb_type: 2, subsystem: 0x40, opcode: 6, response: 0xffff);
             snd.offset_1 = 80;
 
@@ -259,11 +297,13 @@ namespace PlcsimS7online
                     fdr.application_block_opcode = m_application_block_opcode;
                     fdr.application_block_subsystem = m_application_block_subsystem;
 
-                    UserDataConnectionConfigTia ud_cfg = new UserDataConnectionConfigTia(true);
-                    ud_cfg.destination_1 = m_PlcIPAddress.GetAddressBytes()[0];
-                    ud_cfg.destination_2 = m_PlcIPAddress.GetAddressBytes()[1];
-                    ud_cfg.destination_3 = m_PlcIPAddress.GetAddressBytes()[2];
-                    ud_cfg.destination_4 = m_PlcIPAddress.GetAddressBytes()[3];
+                    UserDataConnectionConfigTia ud_cfg = new UserDataConnectionConfigTia(true)
+                    {
+                        destination_1 = m_PlcIPAddress.GetAddressBytes()[0],
+                        destination_2 = m_PlcIPAddress.GetAddressBytes()[1],
+                        destination_3 = m_PlcIPAddress.GetAddressBytes()[2],
+                        destination_4 = m_PlcIPAddress.GetAddressBytes()[3]
+                    };
 
                     ptr = Marshal.AllocHGlobal(Marshal.SizeOf(ud_cfg));
                     Marshal.StructureToPtr(ud_cfg, ptr, false);
@@ -333,7 +373,7 @@ namespace PlcsimS7online
                     //
                     //m_PlcsimConnectionState = PlcsimConnectionState.DisconnectState2;
                     //break;
-                //case PlcsimConnectionState.DisconnectState2:
+                    //case PlcsimConnectionState.DisconnectState2:
                     //rec = ReceiveFromPlcsimDirect();
                     //if (rec.opcode == 0x0c && rec.response == 0x0001)
                     //{
@@ -345,5 +385,7 @@ namespace PlcsimS7online
                     break;
             }
         }
+
+        #endregion
     }
 }

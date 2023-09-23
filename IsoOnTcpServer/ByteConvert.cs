@@ -16,27 +16,30 @@ using System.Net;
 
 namespace IsoOnTcp
 {
-    class ByteConvert
+    internal class ByteConvert
     {
-        public static UInt16 DoReverseEndian(UInt16 x)
+        internal static ushort DoReverseEndian(ushort x)
         {
-            return Convert.ToUInt16((x << 8 & 0xff00) | (x >> 8));
+            return Convert.ToUInt16(((x << 8) & 0xff00) | (x >> 8));
         }
 
-        public static uint DoReverseEndian(uint x)
+        internal static uint DoReverseEndian(uint x)
         {
-            return (x << 24 | (x & 0xff00) << 8 | (x & 0xff0000) >> 8 | x >> 24);
+            return (x << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | (x >> 24);
         }
 
-        public static ulong DoReverseEndian(ulong x)
+        internal static ulong DoReverseEndian(ulong x)
         {
-            return (x << 56 | (x & 0xff00) << 40 | (x & 0xff0000) << 24 | (x & 0xff000000) << 8 | (x & 0xff00000000) >> 8 | (x & 0xff0000000000) >> 24 | (x & 0xff000000000000) >> 40 | x >> 56);
+            return (x << 56) | ((x & 0xff00) << 40) | ((x & 0xff0000) << 24) | ((x & 0xff000000) << 8) | ((x & 0xff00000000) >> 8) | ((x & 0xff0000000000) >> 24) | ((x & 0xff000000000000) >> 40) | (x >> 56);
         }
 
-        public static Int16 GetInt16at(byte[] value, int startindex)
+        internal static short GetInt16at(byte[] value, int startindex)
         {
             if (BitConverter.IsLittleEndian)
+            {
                 return IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, startindex));
+            }
+
             return BitConverter.ToInt16(value, startindex);
         }
     }

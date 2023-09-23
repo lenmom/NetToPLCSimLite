@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 
 // Basic Code of this server is taken from:
@@ -15,7 +14,7 @@ namespace TcpLib
     /// to the server, and provides the means for sending/receiving data to the remote
     /// host.
     /// </SUMMARY>
-    public class ConnectionState
+    internal class ConnectionState
     {
         internal Socket m_conn;
         internal TcpServer m_server;
@@ -25,23 +24,17 @@ namespace TcpLib
         /// <SUMMARY>
         /// Tells you the IP Address of the remote host.
         /// </SUMMARY>
-        public EndPoint RemoteEndPoint {
-            get { return m_conn.RemoteEndPoint; }
-        }
+        public EndPoint RemoteEndPoint => m_conn.RemoteEndPoint;
 
         /// <SUMMARY>
         /// Returns the number of bytes waiting to be read.
         /// </SUMMARY>
-        public int AvailableData {
-            get { return m_conn.Available; }
-        }
+        public int AvailableData => m_conn.Available;
 
         /// <SUMMARY>
         /// Tells you if the socket is connected.
         /// </SUMMARY>
-        public bool Connected {
-            get { return m_conn.Connected; }
-        }
+        public bool Connected => m_conn.Connected;
 
         /// <SUMMARY>
         /// Reads data on the socket, returns the number of bytes read.
@@ -51,8 +44,13 @@ namespace TcpLib
             try
             {
                 if (m_conn?.Available > 0)
+                {
                     return m_conn.Receive(buffer, offset, count, SocketFlags.None);
-                else return 0;
+                }
+                else
+                {
+                    return 0;
+                }
             }
             catch (Exception)
             {
@@ -95,7 +93,7 @@ namespace TcpLib
     /// Allows to provide the server with the actual code that is goint to service
     /// incoming connections.
     /// </SUMMARY>
-    public abstract class TcpServiceProvider : ICloneable
+    internal abstract class TcpServiceProvider : ICloneable
     {
         /// <SUMMARY>
         /// Provides a new instance of the object.
@@ -122,17 +120,17 @@ namespace TcpLib
         public abstract void OnDropConnection(ConnectionState state);
     }
 
-    public class TcpServer : IDisposable
+    internal class TcpServer : IDisposable
     {
-        private int m_port;
+        private readonly int m_port;
         private Socket m_listener;
-        private TcpServiceProvider m_provider;
-        private ArrayList m_connections;
+        private readonly TcpServiceProvider m_provider;
+        private readonly ArrayList m_connections;
         private int _maxConnections = 100;
 
-        private AsyncCallback ConnectionReady;
-        private WaitCallback AcceptConnection;
-        private AsyncCallback ReceivedDataReady;
+        private readonly AsyncCallback ConnectionReady;
+        private readonly WaitCallback AcceptConnection;
+        private readonly AsyncCallback ReceivedDataReady;
 
         private bool Disposed = false;
 
@@ -181,7 +179,11 @@ namespace TcpLib
         {
             try
             {
-                if (m_listener == null) return false;
+                if (m_listener == null)
+                {
+                    return false;
+                }
+
                 m_listener.Bind(new IPEndPoint(ip, m_port));
                 m_listener.Listen(100);
                 m_listener.BeginAccept(ConnectionReady, null);
@@ -201,7 +203,11 @@ namespace TcpLib
         {
             lock (this)
             {
-                if (m_listener == null) return;
+                if (m_listener == null)
+                {
+                    return;
+                }
+
                 Socket conn = m_listener.EndAccept(ar);
                 if (m_connections.Count >= _maxConnections)
                 {
@@ -213,11 +219,13 @@ namespace TcpLib
                 else
                 {
                     //Start servicing a new connection
-                    ConnectionState st = new ConnectionState();
-                    st.m_conn = conn;
-                    st.m_server = this;
-                    st.m_provider = (TcpServiceProvider)m_provider.Clone();
-                    st.m_buffer = new byte[4];
+                    ConnectionState st = new ConnectionState
+                    {
+                        m_conn = conn,
+                        m_server = this,
+                        m_provider = (TcpServiceProvider)m_provider.Clone(),
+                        m_buffer = new byte[4]
+                    };
                     m_connections.Add(st);
                     //Queue the rest of the job to be executed latter
                     ThreadPool.QueueUserWorkItem(AcceptConnection, st);
@@ -238,7 +246,11 @@ namespace TcpLib
                 st.m_provider.OnAcceptConnection(st);
 
                 //Starts the ReceiveData callback loop
-                if (st.m_conn == null) return;
+                if (st.m_conn == null)
+                {
+                    return;
+                }
+
                 if (st.m_conn.Connected)
                 {
                     st.m_conn.BeginReceive(st.m_buffer, 0, 0, SocketFlags.None, ReceivedDataReady, st);
@@ -256,7 +268,10 @@ namespace TcpLib
         private void ReceivedDataReady_Handler(IAsyncResult ar)
         {
             ConnectionState st = ar.AsyncState as ConnectionState;
-            if (st.m_conn == null) return;
+            if (st.m_conn == null)
+            {
+                return;
+            }
 
             try
             {
@@ -268,7 +283,10 @@ namespace TcpLib
             }
             //Im considering the following condition as a signal that the
             //remote host droped the connection.
-            if (st.m_conn.Available == 0) DropConnection(st);
+            if (st.m_conn.Available == 0)
+            {
+                DropConnection(st);
+            }
             else
             {
                 try
@@ -296,7 +314,11 @@ namespace TcpLib
         {
             lock (this)
             {
-                if (m_listener == null) return;
+                if (m_listener == null)
+                {
+                    return;
+                }
+
                 m_listener.Dispose();
                 m_listener = null;
                 //Close all active connections
@@ -307,7 +329,11 @@ namespace TcpLib
                     {
                         st.m_provider.OnDropConnection(st);
 
-                        if (st.m_conn == null) continue;
+                        if (st.m_conn == null)
+                        {
+                            continue;
+                        }
+
                         st.m_conn.Shutdown(SocketShutdown.Both);
                         st.m_conn.Dispose();
                         st.m_conn = null;
@@ -333,9 +359,15 @@ namespace TcpLib
                 {
                     st.m_provider.OnDropConnection(st);
                     if (m_connections.Contains(st))
+                    {
                         m_connections.Remove(st);
+                    }
 
-                    if (st.m_conn == null) return;
+                    if (st.m_conn == null)
+                    {
+                        return;
+                    }
+
                     st.m_conn.Shutdown(SocketShutdown.Both);
                     st.m_conn.Dispose();
                     st.m_conn = null;
@@ -347,17 +379,16 @@ namespace TcpLib
             }
         }
 
-        public int MaxConnections {
-            get {
-                return _maxConnections;
-            }
-            set {
-                _maxConnections = value;
-            }
+        public int MaxConnections
+        {
+            get => _maxConnections;
+            set => _maxConnections = value;
         }
 
-        public int CurrentConnections {
-            get {
+        public int CurrentConnections
+        {
+            get
+            {
                 lock (this) { return m_connections.Count; }
             }
         }

@@ -12,28 +12,46 @@
  /*********************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace IsoOnTcp
 {
-    public class TPKT
+    internal class TPKT
     {
         public const int TPKT_HEADER_LENGTH = 4;
         public const int TPKT_VERSION = 3;
 
-        public int Version = TPKT_VERSION;          // version in TPKT header, 1 Byte
-        public int Reserved = 0;                    // Reserved, 1 Byte
-        public UInt16 Length;                       // Length in TPKT header, 2 Bytes
+        /// <summary>
+        /// version in TPKT header, 1 Byte
+        /// </summary>
+        public int Version = TPKT_VERSION;
 
-        private byte[] _Payload;                    // payload of TPKT packet
-        public byte [] Payload {
-            get {return _Payload;}
-            set { SetPayload(value); }
+        /// <summary>
+        /// Reserved, 1 Byte
+        /// </summary>
+        public int Reserved = 0;
+
+        /// <summary>
+        /// Length in TPKT header, 2 Bytes
+        /// </summary>
+        public ushort Length;
+
+        /// <summary>
+        /// payload of TPKT packet
+        /// </summary>
+        private byte[] _Payload;        
+        
+        public byte[] Payload
+        {
+            get => _Payload;
+            set => SetPayload(value);
         }
 
-        public int PayloadLength;                   // length of TPKT payload
+        /// <summary>
+        /// length of TPKT payload
+        /// </summary>
+        public int PayloadLength;
+
+        #region Constructor
 
         public TPKT()
         {
@@ -56,12 +74,16 @@ namespace IsoOnTcp
         public TPKT(byte[] packet, int packetLen)
         {
             if (packetLen < TPKT_HEADER_LENGTH)
+            {
                 throw new Exception("TPKT: The packet did not contain the minimum number of bytes for an TPKT header packet.");
+            }
 
             Version = packet[0];
 
             if (Version != 3)
+            {
                 throw new Exception("TPKT: Version in header is not valid (!=3).");
+            }
 
             if (BitConverter.IsLittleEndian)
             {
@@ -73,12 +95,18 @@ namespace IsoOnTcp
             }
 
             if (Length > packetLen)
+            {
                 throw new Exception("TPKT: Length in header is greater than packet length.");
+            }
 
             PayloadLength = Length - TPKT_HEADER_LENGTH;
             _Payload = new byte[PayloadLength];
             Array.Copy(packet, 4, _Payload, 0, PayloadLength);
         }
+
+        #endregion
+
+        #region Public Method
 
         public void SetPayload(byte[] data)
         {
@@ -107,5 +135,7 @@ namespace IsoOnTcp
             Array.Copy(_Payload, 0, tpkt, TPKT_HEADER_LENGTH, PayloadLength);
             return tpkt;
         }
+
+        #endregion
     }
 }

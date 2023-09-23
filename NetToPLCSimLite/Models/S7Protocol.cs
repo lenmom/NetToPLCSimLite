@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Timers;
+
 using log4net;
+
 using S7PROSIMLib;
 
 namespace NetToPLCSimLite.Models
@@ -15,30 +11,44 @@ namespace NetToPLCSimLite.Models
     public class S7Protocol : IDisposable
     {
         #region Const
+
         private const byte S7COMM_TRANSPORT_SIZE_BIT = 1;
         private const byte S7COMM_TRANSPORT_SIZE_BYTE = 2;
+
         #endregion
 
-        #region Fields
+        #region Field
+
         public Action<string> ErrorHandler;
 
         private readonly ILog log = LogExt.log;
         private S7ProSim plcsim = new S7ProSim();
         private readonly Timer timer = new Timer();
+
         #endregion
 
-        #region Properties
+        #region Property
+
         public string Name { get; set; } = string.Empty;
+
         public string Ip { get; set; } = string.Empty;
+
         public bool IsConnected { get; set; } = false;
+
         public StationCpu Cpu { get; set; } = StationCpu.S400;
+
         public int Rack { get; set; } = 0;
+
         public int Slot { get; set; } = 3;
+
         public string PlcPath { get; set; } = string.Empty;
+
         public int Instance { get; set; } = -1;
+
         #endregion
 
-        #region Enums
+        #region Enum
+
         public enum StationCpu
         {
             S200 = 0,
@@ -47,9 +57,11 @@ namespace NetToPLCSimLite.Models
             S1200 = 30,
             S1300 = 40,
         }
+
         #endregion
 
-        #region Public Methods
+        #region Public Method
+
         public override string ToString()
         {
             return $"Name:{Name}, IP:{Ip}, Connected:{IsConnected}, Instance:{Instance}";
@@ -59,14 +71,18 @@ namespace NetToPLCSimLite.Models
         {
             try
             {
-                if (Instance < 1 || Instance > 8) return false;
+                if (Instance < 1 || Instance > 8)
+                {
+                    return false;
+                }
+
                 Disconnect();
 
                 plcsim.ConnectionError -= Plcsim_ConnectionError;
                 plcsim.ConnectionError += Plcsim_ConnectionError;
                 plcsim.ConnectExt(Instance);
                 plcsim.SetState("RUN_P");
-                var st = plcsim.GetState();
+                string st = plcsim.GetState();
                 IsConnected = st == "RUN_P" ? true : false;
 
                 if (IsConnected)
@@ -113,27 +129,31 @@ namespace NetToPLCSimLite.Models
 
         public void DataReceived(byte[] data)
         {
-            if (!IsConnected || data == null) return;
+            if (!IsConnected || data == null)
+            {
+                return;
+            }
+
             try
             {
                 // INPUT, WRITE
-                var lenth = data.Length - 28;
+                int lenth = data.Length - 28;
                 if (lenth > 0 && data[0] == 0x32 && data[1] == 0x01 && data[10] == 0x05 && data[14] == 0x10 && data[20] == 0x81)
                 {
                     // address
                     byte[] aa = new byte[4] { 0, data[21], data[22], data[23] };
-                    var addr = BitConverter.ToInt32(aa, 0);
+                    int addr = BitConverter.ToInt32(aa, 0);
                     addr = BitConverter.IsLittleEndian ? IPAddress.HostToNetworkOrder(addr) : addr;
-                    var bytepos = addr / 8;
-                    var bitpos = addr % 8;
+                    int bytepos = addr / 8;
+                    int bitpos = addr % 8;
 
-                    var t_size = data[15];
-                    var len = BitConverter.ToInt16(data, 16);
+                    byte t_size = data[15];
+                    short len = BitConverter.ToInt16(data, 16);
                     len = BitConverter.IsLittleEndian ? IPAddress.HostToNetworkOrder(len) : len;
 
                     if (t_size == S7COMM_TRANSPORT_SIZE_BIT)
                     {
-                        var set = data[28] == 0 ? false : true;
+                        bool set = data[28] == 0 ? false : true;
                         plcsim.WriteInputPoint(bytepos, bitpos, set);
                     }
                     else if (t_size == S7COMM_TRANSPORT_SIZE_BYTE)
@@ -150,9 +170,11 @@ namespace NetToPLCSimLite.Models
                 Disconnect();
             }
         }
+
         #endregion
 
-        #region Private Methods
+        #region Private Method
+
         private void Plcsim_ConnectionError(string ControlEngine, int Error)
         {
             try
@@ -171,7 +193,7 @@ namespace NetToPLCSimLite.Models
         {
             try
             {
-                var st = plcsim?.GetState() == "RUN_P" ? true : false;
+                bool st = plcsim?.GetState() == "RUN_P" ? true : false;
                 if (!st)
                 {
                     plcsim?.SetState("RUN_P");
@@ -185,9 +207,11 @@ namespace NetToPLCSimLite.Models
                 log.Error(nameof(Timer_Elapsed), ex);
             }
         }
+
         #endregion
 
         #region IDisposable Support
+
         private bool disposedValue = false; // 중복 호출을 검색하려면
 
         protected virtual void Dispose(bool disposing)
@@ -222,6 +246,7 @@ namespace NetToPLCSimLite.Models
             // TODO: 위의 종료자가 재정의된 경우 다음 코드 줄의 주석 처리를 제거합니다.
             // GC.SuppressFinalize(this);
         }
+
         #endregion
     }
 }

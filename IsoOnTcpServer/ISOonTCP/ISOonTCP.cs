@@ -13,35 +13,49 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Collections;
-using System.Text;
 using System.IO;
-using HexDumping;
+
 using TcpLib;
 
 namespace IsoOnTcp
 {
-    public class ISOonTCP
+    internal class ISOonTCP
     {
+        #region Field
+
         public bool Connected;
 
-        private int m_ProposedMaxTPDUSize = 1024;  // Proposed Max TPDU size in bytes
-        private int m_MaxTPDUSize;                 // Negotiated TPDU size in bytes
+        /// <summary>
+        /// Proposed Max TPDU size in bytes
+        /// </summary>
+        private readonly int m_ProposedMaxTPDUSize = 1024;
+
+        /// <summary>
+        /// Negotiated TPDU size in bytes
+        /// </summary>
+        private int m_MaxTPDUSize;
 
         public List<byte[]> LocalTsaps;
         public bool EnableLocalTsapCheck;
 
-        public _OnReceived OnReceived;
-        public _TCPSend TCPSend;
-        public _Log Log;
+        private MemoryStream m_payloadFragmentData;
+
+        #endregion
+
+        #region Event
 
         public delegate void _OnReceived(IsoServiceProvider client, byte[] data);
         public delegate void _TCPSend(ConnectionState state, byte[] data);
         public delegate void _Log(string message);
 
-        private MemoryStream m_payloadFragmentData;
-        
+        public _OnReceived OnReceived;
+        public _TCPSend OnTCPSend;
+        public _Log OnLog;
+
+        #endregion
+
+        #region Public Method
+
         public void Process(IsoServiceProvider client, byte[] packet)
         {
             Process(client, packet, packet.Length);
@@ -75,8 +89,10 @@ namespace IsoOnTcp
                             }
 
                             TPKT resPkt = new TPKT();
-                            TPDU resPdu = new TPDU();
-                            resPdu.PDUType = (byte)TPDU.TPDU_TYPES.CC;
+                            TPDU resPdu = new TPDU
+                            {
+                                PDUType = (byte)TPDU.TPDU_TYPES.CC
+                            };
                             Connected = false;
                             m_payloadFragmentData = new MemoryStream(1024);    // Stream for TPDU fragments, S7 PDU has max. 960 bytes
 
@@ -87,7 +103,7 @@ namespace IsoOnTcp
                                 // Add TPDU to TPKT
                                 resPkt.SetPayload(resPdu.GetBytes());
                                 // send connect confirm
-                                TCPSend(client.client, resPkt.GetBytes());
+                                OnTCPSend(client.client, resPkt.GetBytes());
                                 Connected = true;
                                 m_MaxTPDUSize = resPdu.PduCon.GetMaxTPDUSize();
                             }
@@ -100,7 +116,7 @@ namespace IsoOnTcp
                         {
                             if (!Connected)
                             {
-                                Log("DT packet before state 'connected' received.");
+                                OnLog("DT packet before state 'connected' received.");
                                 m_payloadFragmentData.SetLength(0);
                                 break;
                             }
@@ -131,7 +147,7 @@ namespace IsoOnTcp
                         client.client.EndConnection();
                         break;
                     default:
-                        Log("Cannot handle pdu type " + PDU.PDUType);
+                        OnLog("Cannot handle pdu type " + PDU.PDUType);
                         break;
                 }
                 // Build next packet to work on
@@ -151,7 +167,7 @@ namespace IsoOnTcp
         {
             if (!Connected)
             {
-                Log("Cannot send in state 'not connected'");
+                OnLog("Cannot send in state 'not connected'");
                 return -1;
             }
             TPKT resPkt = new TPKT();
@@ -161,8 +177,8 @@ namespace IsoOnTcp
                 // No fragmentation
                 resPdu.MakeDataPacket(data);
                 resPkt.SetPayload(resPdu.GetBytes());
-                TCPSend(state, resPkt.GetBytes());
-            } 
+                OnTCPSend(state, resPkt.GetBytes());
+            }
             else
             {
                 // With fragmentation
@@ -183,11 +199,13 @@ namespace IsoOnTcp
                     }
                     resPdu.MakeDataPacket(data, workedLength, fragLength, lastDataUnit);
                     resPkt.SetPayload(resPdu.GetBytes());
-                    TCPSend(state, resPkt.GetBytes());
+                    OnTCPSend(state, resPkt.GetBytes());
                     workedLength += fragLength;
                 }
             }
             return 0;
         }
+
+        #endregion
     }
 }

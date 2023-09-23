@@ -25,12 +25,19 @@ namespace HexDumping
 
         public static string HexDump(byte[] bytes, int len)
         {
-            if (bytes == null) return "<null>";
+            if (bytes == null)
+            {
+                return "<null>";
+            }
 
-            StringBuilder result = new StringBuilder(((len + 15) / 16) * 78);
+            StringBuilder result = new StringBuilder((len + 15) / 16 * 78);
             char[] chars = new char[78];
 
-            for (int i = 0; i < 75; i++) chars[i] = ' ';
+            for (int i = 0; i < 75; i++)
+            {
+                chars[i] = ' ';
+            }
+
             chars[76] = '\r';
             chars[77] = '\n';
 
@@ -61,9 +68,9 @@ namespace HexDumping
                         byte b = bytes[i1 + i2];
                         chars[offset1] = HexChar(b >> 4);
                         chars[offset1 + 1] = HexChar(b);
-                        chars[offset2] = (b < 32 ? '·' : (char)b);
+                        chars[offset2] = b < 32 ? '·' : (char)b;
                     }
-                    offset1 += (i2 == 8 ? 4 : 3);
+                    offset1 += i2 == 8 ? 4 : 3;
                     offset2++;
                 }
                 result.Append(chars);
@@ -74,8 +81,14 @@ namespace HexDumping
         private static char HexChar(int value)
         {
             value &= 0xF;
-            if (value >= 0 && value <= 9) return (char)('0' + value);
-            else return (char)('A' + (value - 10));
+            if (value >= 0 && value <= 9)
+            {
+                return (char)('0' + value);
+            }
+            else
+            {
+                return (char)('A' + (value - 10));
+            }
         }
     }
 }

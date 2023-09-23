@@ -12,74 +12,33 @@
  /*********************************************************************/
 
 using System;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Net;
 
 namespace PlcsimS7online
 {
-    public class PlcS7onlineMsgPumpS7 : PlcS7onlineMsgPump
+    internal class PlcS7onlineMsgPumpS7 : PlcS7onlineMsgPump
     {
-        const int SIZE_OF_USER_DATA_1 = 1024;
-        const int SEG_LENGTH_1 = 1024;
+        #region Field
 
-        bool m_opcode6_response1_was_received;
+        private const int SIZE_OF_USER_DATA_1 = 1024;
+        private const int SEG_LENGTH_1 = 1024;
+        private bool m_opcode6_response1_was_received;
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
-        private struct UserDataConnectionConfigS7
-        {
-            public byte routing_enabled;
-            public byte b01;
-            public byte b02;
-            public byte b03;
-            public byte b04;
-            public byte b05;
-            public byte b06;
-            public byte b07;
-            public byte b08;
-            public byte destination_1;
-            public byte destination_2;
-            public byte destination_3;
-            public byte destination_4;
-            public byte b13;
-            public byte b14;
-            public byte b15;
-            public byte b16;
-            public byte b17;
-            public byte connection_type;
-            public byte rack_slot;
-            public byte b20;
-            public byte size_to_end;
-            public byte size_of_subnet;
-            public byte subnet_1;
-            public byte subnet_2;
-            public byte b25;
-            public byte b26;
-            public byte subnet_3;
-            public byte subnet_4;
-            public byte size_of_routing_destination;
-            public byte routing_destination_1;
-            public byte routing_destination_2;
-            public byte routing_destination_3;
-            public byte routing_destination_4;
+        #endregion
 
-            public UserDataConnectionConfigS7(bool useConstructor)
-                : this()
-            {
-                b01 = 0x02;
-                b02 = 0x01;
-                b04 = 0x0C;
-                b05 = 0x01;
-                b15 = 0x01;
-                b17 = 0x02;
-            }
-        }
+        #region Constructor
 
         public PlcS7onlineMsgPumpS7(IPAddress plc_ipaddress, int rack, int slot)
-            : base (plc_ipaddress, rack, slot)
+            : base(plc_ipaddress, rack, slot)
         {
             m_opcode6_response1_was_received = false;
         }
+
+        #endregion
+
+        #region Override Method
 
         protected override void WndProc(ref Message m)
         {
@@ -121,6 +80,9 @@ namespace PlcsimS7online
             }
         }
 
+        #endregion
+
+        #region Private Method
 
         private void ReceiveFromPlcsimAndSendBack()
         {
@@ -132,7 +94,7 @@ namespace PlcsimS7online
                 if (m_connectionHandle > 0)
                 {
                     if (m_PlcsimConnectionState == PlcsimConnectionState.ConnectState1 ||
-                        m_PlcsimConnectionState == PlcsimConnectionState.ConnectState2  ||
+                        m_PlcsimConnectionState == PlcsimConnectionState.ConnectState2 ||
                         m_PlcsimConnectionState == PlcsimConnectionState.ConnectState3)
                     {
                         SendConnectErrorMessage("ERROR: Connect failed in SCP_receive at " + m_PlcsimConnectionState.ToString());
@@ -141,7 +103,7 @@ namespace PlcsimS7online
                     {
                         int errno = SCP_get_errno();
                         string errtxt = GetErrTxt(errno);
-                        SendErrorMessage("ERROR: SCP_receive() failed. m_connectionHandle = " + m_connectionHandle + " SCP_get_errno=" + errno + " (" + errtxt +")");
+                        SendErrorMessage("ERROR: SCP_receive() failed. m_connectionHandle = " + m_connectionHandle + " SCP_get_errno=" + errno + " (" + errtxt + ")");
                     }
                 }
                 ExitThisThread();
@@ -190,7 +152,11 @@ namespace PlcsimS7online
 
         private void SendDataToPlcsim(WndProcMessage msg)
         {
-            if (++m_user >= 32000) m_user = 1;
+            if (++m_user >= 32000)
+            {
+                m_user = 1;
+            }
+
             S7OexchangeBlock snd = GetNewS7OexchangeBlock(user: m_user, rb_type: 2, subsystem: 0x40, opcode: 6, response: 0xff);
             snd.offset_1 = 80;
 
@@ -247,13 +213,15 @@ namespace PlcsimS7online
                     fdr.application_block_remote_address_station = 114;
                     fdr.application_block_subsystem = m_application_block_subsystem;
 
-                    UserDataConnectionConfigS7 ud_cfg = new UserDataConnectionConfigS7(true);
-                    ud_cfg.rack_slot = (byte)(m_PlcSlot + m_PlcRack * 32);
-                    ud_cfg.connection_type = 1;
-                    ud_cfg.destination_1 = m_PlcIPAddress.GetAddressBytes()[0];
-                    ud_cfg.destination_2 = m_PlcIPAddress.GetAddressBytes()[1];
-                    ud_cfg.destination_3 = m_PlcIPAddress.GetAddressBytes()[2];
-                    ud_cfg.destination_4 = m_PlcIPAddress.GetAddressBytes()[3];
+                    UserDataConnectionConfigS7 ud_cfg = new UserDataConnectionConfigS7(true)
+                    {
+                        rack_slot = (byte)(m_PlcSlot + (m_PlcRack * 32)),
+                        connection_type = 1,
+                        destination_1 = m_PlcIPAddress.GetAddressBytes()[0],
+                        destination_2 = m_PlcIPAddress.GetAddressBytes()[1],
+                        destination_3 = m_PlcIPAddress.GetAddressBytes()[2],
+                        destination_4 = m_PlcIPAddress.GetAddressBytes()[3]
+                    };
 
                     ptr = Marshal.AllocHGlobal(Marshal.SizeOf(ud_cfg));
                     Marshal.StructureToPtr(ud_cfg, ptr, false);
@@ -283,5 +251,81 @@ namespace PlcsimS7online
                     break;
             }
         }
+
+        #endregion
+
+        #region Nested Object
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
+        private struct UserDataConnectionConfigS7
+        {
+            public byte routing_enabled;
+            public byte b01;
+            public byte b02;
+            public byte b03;
+            public byte b04;
+            public byte b05;
+            public byte b06;
+            public byte b07;
+            public byte b08;
+
+            /// <summary>
+            /// 1st byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
+            public byte destination_1;
+
+            /// <summary>
+            /// 2nd byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
+            public byte destination_2;
+
+            /// <summary>
+            /// 3rd byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
+            public byte destination_3;
+
+            /// <summary>
+            /// 4th byte from user input address to connect, such as 192.168.1.101.
+            /// </summary>
+            public byte destination_4;
+            public byte b13;
+            public byte b14;
+            public byte b15;
+            public byte b16;
+            public byte b17;
+            public byte connection_type;
+
+            /// <summary>
+            /// (PlcSlot + (PlcRack * 32))
+            /// </summary>
+            public byte rack_slot;
+            public byte b20;
+            public byte size_to_end;
+            public byte size_of_subnet;
+            public byte subnet_1;
+            public byte subnet_2;
+            public byte b25;
+            public byte b26;
+            public byte subnet_3;
+            public byte subnet_4;
+            public byte size_of_routing_destination;
+            public byte routing_destination_1;
+            public byte routing_destination_2;
+            public byte routing_destination_3;
+            public byte routing_destination_4;
+
+            public UserDataConnectionConfigS7(bool useConstructor)
+                : this()
+            {
+                b01 = 0x02;
+                b02 = 0x01;
+                b04 = 0x0C;
+                b05 = 0x01;
+                b15 = 0x01;
+                b17 = 0x02;
+            }
+        }
+
+        #endregion
     }
 }
