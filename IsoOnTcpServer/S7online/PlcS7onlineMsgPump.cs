@@ -40,7 +40,7 @@ namespace PlcsimS7online
         /// <summary>
         /// disconnect from Plcsim, and end own thread
         /// </summary>
-        public const int WM_M_EXIT = WM_USER + 1003;               
+        public const int WM_M_EXIT = WM_USER + 1003;
 
         protected const int WM_SINEC = WM_USER + 500;
 
@@ -63,7 +63,8 @@ namespace PlcsimS7online
         #region Event 
 
         public delegate void OnDataFromPlcsimReceived(MessageFromPlcsim message);
-        public event OnDataFromPlcsimReceived eventOnDataFromPlcsimReceived;
+
+        public event OnDataFromPlcsimReceived OnPlcSimDataReceived;
 
         #endregion
 
@@ -132,21 +133,52 @@ namespace PlcsimS7online
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
         protected struct S7OexchangeBlock
         {
-            //Header
+            #region Header
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public ushort[] unknown;
-            public byte headerlength;               // Length of the Request Block without Userdata_1 and 2 (80 Bytes!)
-            public ushort user;                     // Application Specific
-            public byte rb_type;                    // Request Block type (always 2)
-            public byte priority;                   // Priority of the Task, identical like serv_class in the application block
+            /// <summary>
+            /// Length of the Request Block without Userdata_1 and 2 (80 Bytes!)
+            /// </summary>
+            public byte headerlength;
+
+            /// <summary>
+            /// Application Specific
+            /// </summary>
+            public ushort user;
+
+            /// <summary>
+            /// Request Block type (always 2)
+            /// </summary>
+            public byte rb_type;
+
+            /// <summary>
+            /// Priority of the Task, identical like serv_class in the application block
+            /// </summary>
+            public byte priority;
             public byte reserved_1;
             public ushort reserved_2;
-            public byte subsystem;                  // For FDL Communication this is 22h = 34
-            public byte opcode;                     // request, confirm, indication => same as opcode in application block
-            public ushort response;                 // return-parameter => same as l_status in application block
+
+            /// <summary>
+            /// For FDL Communication this is 22h = 34
+            /// </summary>
+            public byte subsystem;
+
+            /// <summary>
+            /// request, confirm, indication => same as opcode in application block
+            /// </summary>
+            public byte opcode;
+
+            /// <summary>
+            /// return-parameter => same as l_status in application block
+            /// </summary>
+            public ushort response;
             public ushort fill_length_1;
             public byte reserved_3;
-            public ushort seg_length_1;             // Length of Userdata_1
+
+            /// <summary>
+            /// Length of Userdata_1
+            /// </summary>
+            public ushort seg_length_1;
             public ushort offset_1;
             public ushort reserved_4;
             public ushort fill_length_2;
@@ -154,35 +186,115 @@ namespace PlcsimS7online
             public ushort seg_length_2;
             public ushort offset_2;
             public ushort reserved_6;
-            //End of Header
 
-            //Application Block
-            public byte application_block_opcode;                       // class of communication   (00 = request, 01=confirm, 02=indication)
-            public byte application_block_subsystem;                    // number of source-task (only necessary for MTK-user !!!!!)
-            public ushort application_block_id;                         // identification of FDL-USER
-            public ushort application_block_service;                    // identification of service (00 -> SDA, send data with acknowlege)
-            public byte application_block_local_address_station;        // only for network-connection !!!
-            public byte application_block_local_address_segment;        // only for network-connection !!!
-            public byte application_block_ssap;                         // source-service-access-point
-            public byte application_block_dsap;                         // destination-service-access-point
-            public byte application_block_remote_address_station;       // address of the remote-station
-            public byte application_block_remote_address_segment;       // only for network-connection !!!
-            public ushort application_block_service_class;              // priority of service
-            public int application_block_receive_l_sdu_buffer_ptr;    // address and length of received netto-data, exception:
-            public byte application_block_receive_l_sdu_length;         // address and length of received netto-data, exception:
-            public byte application_block_reserved_1;                   // (reserved for FDL !!!!!!!!!!)
-            public byte application_block_reserved;                     // (reserved for FDL !!!!!!!!!!)
-            public int application_block_send_l_sdu_buffer_ptr;       // address and length of send-netto-data, exception:
-            public byte application_block_send_l_sdu_length;            // address and length of send-netto-data, exception:
-            public ushort application_block_l_status;                   // link-status of service or update_state for srd-indication
+            #endregion
+
+            #region Application Block
+
+            /// <summary>
+            /// class of communication   (00 = request, 01=confirm, 02=indication)
+            /// </summary>
+            public byte application_block_opcode;                       
+
+            /// <summary>
+            /// number of source-task (only necessary for MTK-user !!!!!)
+            /// </summary>
+            public byte application_block_subsystem;                    
+
+            /// <summary>
+            /// identification of FDL-USER
+            /// </summary>
+            public ushort application_block_id;                         
+
+            /// <summary>
+            /// identification of service (00 -> SDA, send data with acknowlege)
+            /// </summary>
+            public ushort application_block_service;                    
+
+            /// <summary>
+            /// only for network-connection !!!
+            /// </summary>
+            public byte application_block_local_address_station;       
+
+            /// <summary>
+            /// only for network-connection !!!
+            /// </summary>
+            public byte application_block_local_address_segment;        
+
+            /// <summary>
+            /// source-service-access-point
+            /// </summary>
+            public byte application_block_ssap;                         
+
+            /// <summary>
+            /// destination-service-access-point
+            /// </summary>
+            public byte application_block_dsap;                         
+
+            /// <summary>
+            /// address of the remote-station
+            /// </summary>
+            public byte application_block_remote_address_station;       
+
+            /// <summary>
+            /// only for network-connection !!!
+            /// </summary>
+            public byte application_block_remote_address_segment;       
+
+            /// <summary>
+            /// priority of service
+            /// </summary>
+            public ushort application_block_service_class;              
+
+            /// <summary>
+            /// address and length of received netto-data, exception:
+            /// </summary>
+            public int application_block_receive_l_sdu_buffer_ptr;    
+
+            /// <summary>
+            /// address and length of received netto-data, exception:
+            /// </summary>
+            public byte application_block_receive_l_sdu_length;         
+
+            /// <summary>
+            /// (reserved for FDL !!!!!!!!!!)
+            /// </summary>
+            public byte application_block_reserved_1;                   
+
+            /// <summary>
+            /// (reserved for FDL !!!!!!!!!!)
+            /// </summary>
+            public byte application_block_reserved;                     
+
+            /// <summary>
+            /// address and length of send-netto-data, exception:
+            /// </summary>
+            public int application_block_send_l_sdu_buffer_ptr;       
+
+            /// <summary>
+            /// address and length of send-netto-data, exception:
+            /// </summary>
+            public byte application_block_send_l_sdu_length;            
+
+            /// <summary>
+            /// link-status of service or update_state for srd-indication
+            /// </summary>
+            public ushort application_block_l_status;                   
+
+            /// <summary>
+            /// for concatenated lists       (reserved for FDL !!!!!!!!!!)
+            /// </summary>
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-            public ushort[] application_block_reserved_2;               // for concatenated lists       (reserved for FDL !!!!!!!!!!)
-            //End Application block
+            public ushort[] application_block_reserved_2;               
+
+            #endregion
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
             public byte[] reserved;
+
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public byte[] reference;
+
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1024)]
             public byte[] user_data_1;
         }
@@ -336,7 +448,7 @@ namespace PlcsimS7online
 
         protected void SendErrorMessage(string text)
         {
-            if (eventOnDataFromPlcsimReceived != null)
+            if (OnPlcSimDataReceived != null)
             {
                 MessageFromPlcsim message = new MessageFromPlcsim
                 {
@@ -344,13 +456,13 @@ namespace PlcsimS7online
                     textmessage = text,
                     pdu = null
                 };
-                eventOnDataFromPlcsimReceived(message);
+                OnPlcSimDataReceived(message);
             }
         }
 
         protected void SendConnectSuccessMessage(string text)
         {
-            if (eventOnDataFromPlcsimReceived != null)
+            if (OnPlcSimDataReceived != null)
             {
                 MessageFromPlcsim message = new MessageFromPlcsim
                 {
@@ -358,13 +470,13 @@ namespace PlcsimS7online
                     textmessage = text,
                     pdu = null
                 };
-                eventOnDataFromPlcsimReceived(message);
+                OnPlcSimDataReceived(message);
             }
         }
 
         protected void SendConnectErrorMessage(string text)
         {
-            if (eventOnDataFromPlcsimReceived != null)
+            if (OnPlcSimDataReceived != null)
             {
                 MessageFromPlcsim message = new MessageFromPlcsim
                 {
@@ -372,13 +484,13 @@ namespace PlcsimS7online
                     textmessage = text,
                     pdu = null
                 };
-                eventOnDataFromPlcsimReceived(message);
+                OnPlcSimDataReceived(message);
             }
         }
 
         protected void SendStatusMessage(string text)
         {
-            if (eventOnDataFromPlcsimReceived != null)
+            if (OnPlcSimDataReceived != null)
             {
                 MessageFromPlcsim message = new MessageFromPlcsim
                 {
@@ -386,13 +498,13 @@ namespace PlcsimS7online
                     textmessage = text,
                     pdu = null
                 };
-                eventOnDataFromPlcsimReceived(message);
+                OnPlcSimDataReceived(message);
             }
         }
 
         protected void SendPduMessage(byte[] data)
         {
-            if (eventOnDataFromPlcsimReceived != null)
+            if (OnPlcSimDataReceived != null)
             {
                 MessageFromPlcsim message = new MessageFromPlcsim
                 {
@@ -400,7 +512,7 @@ namespace PlcsimS7online
                     textmessage = string.Empty,
                     pdu = data
                 };
-                eventOnDataFromPlcsimReceived(message);
+                OnPlcSimDataReceived(message);
             }
         }
 
@@ -476,7 +588,7 @@ namespace PlcsimS7online
             DoTrace(dump, false);
         }
 
-        protected string GetErrTxt(int number)
+        protected string GetErrMessage(int number)
         {
             switch (number)
             {

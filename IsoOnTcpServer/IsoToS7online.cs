@@ -405,7 +405,7 @@ namespace IsoOnTcp
             {
                 m_PlcS7onlineMsgPump = new PlcS7onlineMsgPumpS7(m_PlcsimIpAdress, m_PlcsimRackNumber, m_PlcsimSlotNumber);
             }
-            m_PlcS7onlineMsgPump.eventOnDataFromPlcsimReceived += new PlcS7onlineMsgPump.OnDataFromPlcsimReceived(OnDataFromPlcsimReceived);
+            m_PlcS7onlineMsgPump.OnPlcSimDataReceived += new PlcS7onlineMsgPump.OnDataFromPlcsimReceived(OnDataFromPlcsimReceived);
             PlcS7onlineMsgPumpThread.Start();
         }
 

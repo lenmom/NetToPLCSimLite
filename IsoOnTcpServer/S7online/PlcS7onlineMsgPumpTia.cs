@@ -193,7 +193,7 @@ namespace PlcsimS7online
                     else
                     {
                         int errno = SCP_get_errno();
-                        string errtxt = GetErrTxt(errno);
+                        string errtxt = GetErrMessage(errno);
                         SendErrorMessage("ERROR: SCP_receive() failed. m_connectionHandle = " + m_connectionHandle + " SCP_get_errno=" + errno + " (" + errtxt + ")");
                     }
                 }
