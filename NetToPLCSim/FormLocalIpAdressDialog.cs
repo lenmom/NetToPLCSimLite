@@ -32,12 +32,20 @@ namespace NetToPLCSim
             listBoxLocalIpAddresses.AutoSize = true;
             listBoxLocalIpAddresses.Items.Clear();
 
-            var intf = NetworkInterface.GetAllNetworkInterfaces();
-            foreach (var device in intf)
+            NetworkInterface[] intf = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface device in intf)
+            {
                 if (device.NetworkInterfaceType.Equals(NetworkInterfaceType.Ethernet))
-                    foreach (var addressInformation in device.GetIPProperties().UnicastAddresses)
+                {
+                    foreach (UnicastIPAddressInformation addressInformation in device.GetIPProperties().UnicastAddresses)
+                    {
                         if (addressInformation.Address.AddressFamily == AddressFamily.InterNetwork)
+                        {
                             listBoxLocalIpAddresses.Items.Add(string.Format("{0} - [{1}]", addressInformation.Address, device.Description));
+                        }
+                    }
+                }
+            }
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -48,7 +56,9 @@ namespace NetToPLCSim
         private void listBoxLocalIpAddresses_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBoxLocalIpAddresses.SelectedItem != null)
+            {
                 btnOK.Enabled = true;
+            }
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -67,7 +77,7 @@ namespace NetToPLCSim
         {
             if (listBoxLocalIpAddresses.SelectedItem != null)
             {
-                var sel = listBoxLocalIpAddresses.SelectedItem.ToString();
+                string sel = listBoxLocalIpAddresses.SelectedItem.ToString();
                 ChosenIPaddress = sel.Substring(0, sel.IndexOf(" "));
                 DialogResult = DialogResult.OK;
                 Close();

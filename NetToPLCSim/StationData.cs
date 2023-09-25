@@ -136,12 +136,14 @@ namespace NetToPLCSim
         private void NotifyPropertyChanged(string name)
         {
             if (PropertyChanged != null)
+            {
                 PropertyChanged(this, new PropertyChangedEventArgs(name));
+            }
         }
 
         public StationData ShallowCopy()
         {
-            return (StationData) MemberwiseClone();
+            return (StationData)MemberwiseClone();
         }
     }
 }

@@ -195,7 +195,10 @@ namespace NetToPLCSim
                 progressBar1.Value = 0;
             }
 
-            if (Success && AutoCloseOnSuccess) Close();
+            if (Success && AutoCloseOnSuccess)
+            {
+                Close();
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)

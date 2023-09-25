@@ -15,6 +15,7 @@ using System;
 using System.Drawing;
 using System.Net;
 using System.Windows.Forms;
+
 using IsoOnTcp;
 
 namespace NetToPLCSim
@@ -75,7 +76,7 @@ namespace NetToPLCSim
         private void FormMonitor_Shown(object sender, EventArgs e)
         {
             m_eventServer.monitorDataReceived += OnDataReceived;
-            var msg = "Started monitoring server '" + m_eventServer.Name + "' on interface " + m_eventServer.NetworkIpAdress + ".";
+            string msg = "Started monitoring server '" + m_eventServer.Name + "' on interface " + m_eventServer.NetworkIpAdress + ".";
             tbMonitor.AppendText(DateTime.Now.ToString("HH:mm:ss.fff ") + msg + Environment.NewLine);
         }
 
@@ -94,15 +95,27 @@ namespace NetToPLCSim
             }
             else
             {
-                if (tbMonitor.IsDisposed) return;
+                if (tbMonitor.IsDisposed)
+                {
+                    return;
+                }
+
                 try
                 {
                     if (m_capture_active)
                     {
-                        var timestamp = DateTime.Now.ToString("HH:mm:ss.fff ");
+                        string timestamp = DateTime.Now.ToString("HH:mm:ss.fff ");
                         tbMonitor.AppendText(timestamp + "[" + sourceIP + "] ");
-                        if (message != string.Empty) tbMonitor.AppendText(message + Environment.NewLine);
-                        if (data != null) DissectProtocol(data, sourceIP);
+                        if (message != string.Empty)
+                        {
+                            tbMonitor.AppendText(message + Environment.NewLine);
+                        }
+
+                        if (data != null)
+                        {
+                            DissectProtocol(data, sourceIP);
+                        }
+
                         m_lineNr++;
                     }
                 }
@@ -120,13 +133,13 @@ namespace NetToPLCSim
         private void DissectProtocol(byte[] data, string sourceIP)
         {
             int lengthComplete;
-            var headerLen = 10;
-            var paramLen = 0;
-            var dataLen = 0;
-            var pos = 0;
+            int headerLen = 10;
+            int paramLen = 0;
+            int dataLen = 0;
+            int pos = 0;
             byte pduType = 0;
             byte func = 0;
-            var decoded = false;
+            bool decoded = false;
 
             string sPduType;
             string sParamType;
@@ -135,6 +148,7 @@ namespace NetToPLCSim
             sParamType = "unknown";
             lengthComplete = data.Length;
             if (lengthComplete > 10)
+            {
                 // Header
                 if (data[0] == 0x32)
                 {
@@ -207,8 +221,8 @@ namespace NetToPLCSim
                                 pos += 2;
                                 tbMonitor.AppendText(string.Format("Request subscribe cyclic data. Items: {0:D} Timebase: {1:D} Time: {2:D}", item_count, data[pos], data[pos + 1]));
                                 pos += 2;
-                                var itemInformation = string.Empty;
-                                for (var i = 1; i <= item_count; i++)
+                                string itemInformation = string.Empty;
+                                for (int i = 1; i <= item_count; i++)
                                 {
                                     itemInformation += Environment.NewLine + "             Item [" + i.ToString().PadLeft(2) + "]: ";
                                     itemInformation += DecodeItem(i, data, ref pos, sourceIP);
@@ -239,12 +253,16 @@ namespace NetToPLCSim
                         pos += 1;
                         tbMonitor.AppendText(" of " + item_count);
                         if (item_count > 1)
+                        {
                             tbMonitor.AppendText(" items.");
+                        }
                         else
+                        {
                             tbMonitor.AppendText(" item.");
+                        }
 
-                        var itemInformation = string.Empty;
-                        for (var i = 1; i <= item_count; i++)
+                        string itemInformation = string.Empty;
+                        for (int i = 1; i <= item_count; i++)
                         {
                             itemInformation += Environment.NewLine + "             Item [" + i.ToString().PadLeft(2) + "]: ";
                             itemInformation += DecodeItem(i, data, ref pos, sourceIP);
@@ -253,16 +271,21 @@ namespace NetToPLCSim
                         tbMonitor.AppendText(itemInformation);
                     }
                 }
+            }
 
             if (decoded == false)
+            {
                 tbMonitor.AppendText("Undecoded telegram data" + Environment.NewLine);
+            }
             else
+            {
                 tbMonitor.AppendText(Environment.NewLine);
+            }
         }
 
         private string DecodeItem(int itemNr, byte[] data, ref int pos, string sourceIP)
         {
-            var sItemName = "Unknown";
+            string sItemName = "Unknown";
             byte var_spec_type;
             byte var_spec_len;
             byte var_spec_syntax_id;
@@ -294,16 +317,20 @@ namespace NetToPLCSim
             if (var_spec_syntax_id == 0x10)
             {
                 // 3 bytes address
-                var aa = new byte[4];
+                byte[] aa = new byte[4];
                 aa[0] = 0;
                 aa[1] = data[pos];
                 aa[2] = data[pos + 1];
                 aa[3] = data[pos + 2];
                 pos += 3;
                 if (BitConverter.IsLittleEndian)
+                {
                     address = IPAddress.HostToNetworkOrder(BitConverter.ToInt32(aa, 0));
+                }
                 else
+                {
                     address = BitConverter.ToInt32(aa, 0);
+                }
 
                 bytepos = address / 8;
                 bitpos = address % 8;
@@ -349,7 +376,7 @@ namespace NetToPLCSim
                 else
                 {
                     sItemName += " " + bytepos + "." + bitpos + " ";
-                    var t_size_name = "Unknown transport size";
+                    string t_size_name = "Unknown transport size";
                     switch (t_size)
                     {
                         case S7COMM_TRANSPORT_SIZE_BIT:
@@ -400,21 +427,28 @@ namespace NetToPLCSim
         private short GetInt16at(byte[] value, int startindex)
         {
             if (BitConverter.IsLittleEndian)
+            {
                 return IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, startindex));
+            }
+
             return BitConverter.ToInt16(value, startindex);
         }
 
         private void tbMonitor_TextChanged(object sender, EventArgs e)
         {
             // if more than 5000 lines, remove the last 1000
-            var maxLines = 5000;
-            var linesToRemove = 1000;
+            int maxLines = 5000;
+            int linesToRemove = 1000;
             if (tbMonitor.Lines.Length > maxLines)
             {
-                var selectionstart = tbMonitor.SelectionStart;
-                var firstlinelength = tbMonitor.Lines[0].Length;
-                var lentoremove = 0;
-                for (var i = 0; i < linesToRemove; i++) lentoremove += tbMonitor.Lines[i].Length + 2; // 2= \r\n
+                int selectionstart = tbMonitor.SelectionStart;
+                int firstlinelength = tbMonitor.Lines[0].Length;
+                int lentoremove = 0;
+                for (int i = 0; i < linesToRemove; i++)
+                {
+                    lentoremove += tbMonitor.Lines[i].Length + 2; // 2= \r\n
+                }
+
                 tbMonitor.Text = tbMonitor.Text.Remove(0, lentoremove);
                 tbMonitor.SelectionStart = selectionstart - lentoremove;
                 tbMonitor.ScrollToCaret();

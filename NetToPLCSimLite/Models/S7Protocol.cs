@@ -8,7 +8,7 @@ using S7PROSIMLib;
 
 namespace NetToPLCSimLite.Models
 {
-    public class S7Protocol : IDisposable
+    internal class S7Protocol : IS7Protocol
     {
         #region Const
 
@@ -27,53 +27,34 @@ namespace NetToPLCSimLite.Models
 
         #region Event
 
-        internal Action<string> OnError;
+        public event Action<string> OnError;
 
         #endregion
 
         #region Property
 
-        internal string Name { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
 
-        internal string Ip { get; set; } = string.Empty;
+        public string Ip { get; set; } = string.Empty;
 
-        internal bool IsConnected { get; set; } = false;
+        public bool IsConnected { get; set; } = false;
 
-        internal StationCpu Cpu { get; set; } = StationCpu.S400;
+        public StationCpu Cpu { get; set; } = StationCpu.S400;
 
         /// <summary>
         ///  S300/s400/S1200/S1500,0.
         /// </summary>
-        internal int Rack { get; set; } = 0;
+        public int Rack { get; set; } = 0;
 
         /// <summary>
         /// S300/s400,2;
         /// S1200/S1500,1.
         /// </summary>
-        internal int Slot { get; set; } = 3;
+        public int Slot { get; set; } = 3;
 
-        internal string PlcPath { get; set; } = string.Empty;
+        public string PlcPath { get; set; } = string.Empty;
 
-        internal int Instance { get; set; } = -1;
-
-        #endregion
-
-        #region Nested Object
-
-        internal enum StationCpu
-        {
-            S200 = 0,
-
-            S300 = 10,
-
-            S400 = 20,
-
-            S1200 = 30,
-
-            S1300 = 40,
-
-            S1500 = 50,
-        }
+        public int Instance { get; set; } = -1;
 
         #endregion
 
@@ -84,7 +65,7 @@ namespace NetToPLCSimLite.Models
             return $"Name:{Name}, IP:{Ip}, Connected:{IsConnected}, Instance:{Instance}";
         }
 
-        internal bool Connect()
+        public bool Connect()
         {
             try
             {
@@ -99,8 +80,8 @@ namespace NetToPLCSimLite.Models
                 s7proSim.ConnectionError += PlcSim_ConnectionError;
                 s7proSim.ConnectExt(Instance);
                 s7proSim.SetState("RUN_P");
-                string st = s7proSim.GetState();
-                IsConnected = st == "RUN_P" ? true : false;
+                string state = s7proSim.GetState();
+                IsConnected = state == "RUN_P" ? true : false;
 
                 if (IsConnected)
                 {
@@ -120,7 +101,7 @@ namespace NetToPLCSimLite.Models
             return IsConnected;
         }
 
-        internal void Disconnect()
+        public void Disconnect()
         {
             try
             {
@@ -144,7 +125,7 @@ namespace NetToPLCSimLite.Models
             }
         }
 
-        internal void DataReceived(byte[] data)
+        public void DataReceived(byte[] data)
         {
             if (!IsConnected || data == null)
             {
@@ -237,13 +218,9 @@ namespace NetToPLCSimLite.Models
             {
                 if (disposing)
                 {
-                    // TODO: 관리되는 상태(관리되는 개체)를 삭제합니다.
                     Disconnect();
                     s7proSim = null;
                 }
-
-                // TODO: 관리되지 않는 리소스(관리되지 않는 개체)를 해제하고 아래의 종료자를 재정의합니다.
-                // TODO: 큰 필드를 null로 설정합니다.
 
                 disposedValue = true;
             }
@@ -251,9 +228,7 @@ namespace NetToPLCSimLite.Models
 
         public void Dispose()
         {
-            // 이 코드를 변경하지 마세요. 위의 Dispose(bool disposing)에 정리 코드를 입력하세요.
             Dispose(true);
-            // TODO: 위의 종료자가 재정의된 경우 다음 코드 줄의 주석 처리를 제거합니다.
             // GC.SuppressFinalize(this);
         }
 

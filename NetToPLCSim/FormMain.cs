@@ -18,7 +18,9 @@ using System.IO;
 using System.Net;
 using System.ServiceProcess;
 using System.Windows.Forms;
+
 using Ini;
+
 using IsoOnTcp;
 
 namespace NetToPLCSim
@@ -53,7 +55,7 @@ namespace NetToPLCSim
             StopServer();
             if (m_S7DOSServiceStopped)
             {
-                var result = MessageBox.Show(
+                DialogResult result = MessageBox.Show(
                     "You have stopped the 'SIMATIC S7DOS Help Service'.\n"
                     + "Remind to restart the service before using other Simatic software.\n\n"
                     + "Try to restart the service?",
@@ -69,7 +71,7 @@ namespace NetToPLCSim
 
         private void SetToolTipText()
         {
-            var toolTip = new ToolTip();
+            ToolTip toolTip = new ToolTip();
             toolTip.SetToolTip(btnStartServer, "Start NetToPLCsim server");
             toolTip.SetToolTip(btnStopServer, "Stop NetToPLCsim server");
             toolTip.SetToolTip(btnAdd, "Add a new station to configuration");
@@ -95,30 +97,40 @@ namespace NetToPLCSim
         {
             dgvStations.AutoGenerateColumns = false;
 
-            var nameColumn = new DataGridViewTextBoxColumn();
-            nameColumn.DataPropertyName = "Name";
-            nameColumn.HeaderText = "Name";
-            nameColumn.Width = 110;
+            DataGridViewTextBoxColumn nameColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Name",
+                HeaderText = "Name",
+                Width = 110
+            };
 
-            var netipColumn = new DataGridViewTextBoxColumn();
-            netipColumn.DataPropertyName = "NetworkIpAddress";
-            netipColumn.HeaderText = "Network address";
-            netipColumn.Width = 120;
+            DataGridViewTextBoxColumn netipColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "NetworkIpAddress",
+                HeaderText = "Network address",
+                Width = 120
+            };
 
-            var plcsimipColumn = new DataGridViewTextBoxColumn();
-            plcsimipColumn.DataPropertyName = "PlcsimIpAddress";
-            plcsimipColumn.HeaderText = "Plcsim address";
-            plcsimipColumn.Width = 120;
+            DataGridViewTextBoxColumn plcsimipColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "PlcsimIpAddress",
+                HeaderText = "Plcsim address",
+                Width = 120
+            };
 
-            var rackSlotColumn = new DataGridViewTextBoxColumn();
-            rackSlotColumn.DataPropertyName = "PlcsimRackSlot";
-            rackSlotColumn.HeaderText = "Rack/Slot";
-            rackSlotColumn.Width = 30;
+            DataGridViewTextBoxColumn rackSlotColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "PlcsimRackSlot",
+                HeaderText = "Rack/Slot",
+                Width = 30
+            };
 
-            var statusColumn = new DataGridViewTextBoxColumn();
-            statusColumn.DataPropertyName = "Status";
-            statusColumn.HeaderText = "Status";
-            statusColumn.Width = 111;
+            DataGridViewTextBoxColumn statusColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Status",
+                HeaderText = "Status",
+                Width = 111
+            };
 
             dgvStations.Columns.Add(nameColumn);
             dgvStations.Columns.Add(netipColumn);
@@ -150,21 +162,27 @@ namespace NetToPLCSim
                 {
                     if (StartArgs.AutoStopService == eAutoStopService.ASK)
                     {
-                        var result = MessageBox.Show(
+                        DialogResult result = MessageBox.Show(
                             "Port 102 is in use!\n\n"
                             + "Before you can use NetToPLCsim you have to stop the program which uses this port. "
                             + "Seems to be the 'SIMATIC S7DOS Help Service' '" + m_IEPGhelperServiceName + "'\n\n"
                             + "If you have started NetToPLCsim with administrative rights, the service could automatically be stopped.\n\n"
                             + "Try to stop this service?", "Warning", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
 
-                        if (result == DialogResult.Yes) m_S7DOSServiceStopped = getPort102back(false);
+                        if (result == DialogResult.Yes)
+                        {
+                            m_S7DOSServiceStopped = getPort102back(false);
+                        }
                     }
                     else if (StartArgs.AutoStopService == eAutoStopService.YES)
                     {
                         m_S7DOSServiceStopped = getPort102back(true);
                     }
 
-                    if (Tools.IsTcpPortAvailable(102)) toolStripStatusLabel3.Text = "Port 102 OK";
+                    if (Tools.IsTcpPortAvailable(102))
+                    {
+                        toolStripStatusLabel3.Text = "Port 102 OK";
+                    }
                 }
             }
             else
@@ -175,7 +193,10 @@ namespace NetToPLCSim
             if (StartArgs.StartIni != string.Empty)
             {
                 LoadIniFile(StartArgs.StartIni);
-                if (StartArgs.AutoStart == eAutoStart.YES) btnStartServer_Click(null, null);
+                if (StartArgs.AutoStart == eAutoStart.YES)
+                {
+                    btnStartServer_Click(null, null);
+                }
             }
         }
 
@@ -186,17 +207,17 @@ namespace NetToPLCSim
 
         private void btnStartServer_Click(object sender, EventArgs e)
         {
-            var oneStationWasStarted = false;
+            bool oneStationWasStarted = false;
 
-            foreach (var station in m_Conf.Stations)
+            foreach (StationData station in m_Conf.Stations)
             {
-                var tsaps = new List<byte[]>();
-                var tsap2 = (byte) ((station.PlcsimRackNumber << 4) | station.PlcsimSlotNumber);
-                tsaps.Add(new byte[] {0x01, tsap2});
-                tsaps.Add(new byte[] {0x02, tsap2});
-                tsaps.Add(new byte[] {0x03, tsap2});
+                List<byte[]> tsaps = new List<byte[]>();
+                byte tsap2 = (byte)((station.PlcsimRackNumber << 4) | station.PlcsimSlotNumber);
+                tsaps.Add(new byte[] { 0x01, tsap2 });
+                tsaps.Add(new byte[] { 0x02, tsap2 });
+                tsaps.Add(new byte[] { 0x03, tsap2 });
 
-                var srv = new IsoToS7online(station.TsapCheckEnabled);
+                IsoToS7online srv = new IsoToS7online(station.TsapCheckEnabled);
                 m_servers.Add(srv);
                 try
                 {
@@ -228,11 +249,17 @@ namespace NetToPLCSim
 
         private void StopServer()
         {
-            foreach (var srv in m_servers) srv.stop();
+            foreach (IsoToS7online srv in m_servers)
+            {
+                srv.Stop();
+            }
 
             m_servers.Clear();
 
-            foreach (var station in m_Conf.Stations) station.Status = StationStatus.STOPPED.ToString();
+            foreach (StationData station in m_Conf.Stations)
+            {
+                station.Status = StationStatus.STOPPED.ToString();
+            }
 
             ConfigFieldsEditable(true);
             monitorToolStripMenuItem.Enabled = false;
@@ -252,30 +279,34 @@ namespace NetToPLCSim
 
         private void btnNewStation_Click(object sender, EventArgs e)
         {
-            var c = (Control) sender;
+            Control c = (Control)sender;
             AddNewStation(c.Location);
         }
 
         private void AddNewStation(Point clickPoint)
         {
-            var dlg = new FormStationEdit();
-            var parentPoint = Location;
+            FormStationEdit dlg = new FormStationEdit();
+            Point parentPoint = Location;
 
             parentPoint.X += clickPoint.X;
             parentPoint.Y += clickPoint.Y;
             dlg.Location = parentPoint;
 
             string station_name;
-            var station_nr = 1;
-            var found = false;
+            int station_nr = 1;
+            bool found = false;
             do
             {
                 // Enter a default Station dummy name
                 station_name = string.Format("PLC#{0:000}", station_nr);
                 if (m_Conf.IsStationNameUnique(station_name) == false)
+                {
                     station_nr++;
+                }
                 else
+                {
                     found = true;
+                }
             } while (found == false);
 
             dlg.Station.Name = station_name;
@@ -289,7 +320,7 @@ namespace NetToPLCSim
                     return;
                 }
 
-                var station = new StationData(dlg.Station.Name, dlg.Station.NetworkIpAddress, dlg.Station.PlcsimIpAddress,
+                StationData station = new StationData(dlg.Station.Name, dlg.Station.NetworkIpAddress, dlg.Station.PlcsimIpAddress,
                     dlg.Station.PlcsimRackNumber, dlg.Station.PlcsimSlotNumber, dlg.Station.TsapCheckEnabled);
 
                 m_Conf.Stations.Add(station);
@@ -298,17 +329,21 @@ namespace NetToPLCSim
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var loc = new Point();
-            loc.X = Width / 4;
-            loc.Y = Height / 4;
+            Point loc = new Point
+            {
+                X = Width / 4,
+                Y = Height / 4
+            };
             AddNewStation(loc);
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            var loc = new Point();
-            loc.X = Width / 4;
-            loc.Y = Height / 4;
+            Point loc = new Point
+            {
+                X = Width / 4,
+                Y = Height / 4
+            };
             AddNewStation(loc);
         }
 
@@ -324,8 +359,11 @@ namespace NetToPLCSim
 
         private void DeleteSelectedStations()
         {
-            var selectedRow = GetSelectedDgvRow(dgvStations);
-            if (selectedRow >= 0) m_Conf.Stations.RemoveAt(selectedRow);
+            int selectedRow = GetSelectedDgvRow(dgvStations);
+            if (selectedRow >= 0)
+            {
+                m_Conf.Stations.RemoveAt(selectedRow);
+            }
         }
 
         private void modifyToolStripMenuItem_Click(object sender, EventArgs e)
@@ -341,32 +379,39 @@ namespace NetToPLCSim
         private void dgvStations_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (btnModify.Enabled)
+            {
                 ModifyStation();
+            }
         }
 
         // Returns -1 when no row is selected
         private int GetSelectedDgvRow(DataGridView dgv)
         {
-            var selectedRowCount = dgv.Rows.GetRowCount(DataGridViewElementStates.Selected);
-            if (selectedRowCount == 0) return -1;
+            int selectedRowCount = dgv.Rows.GetRowCount(DataGridViewElementStates.Selected);
+            if (selectedRowCount == 0)
+            {
+                return -1;
+            }
 
             return dgv.SelectedRows[0].Index;
         }
 
         private void ModifyStation()
         {
-            var selectedRow = GetSelectedDgvRow(dgvStations);
+            int selectedRow = GetSelectedDgvRow(dgvStations);
 
             if (selectedRow < 0)
             {
             }
             else
             {
-                var dlg = new FormStationEdit();
-                var parentPoint = Location;
-                var loc = new Point();
-                loc.X = Width / 4;
-                loc.Y = Height / 4;
+                FormStationEdit dlg = new FormStationEdit();
+                Point parentPoint = Location;
+                Point loc = new Point
+                {
+                    X = Width / 4,
+                    Y = Height / 4
+                };
 
                 parentPoint.X += loc.X;
                 parentPoint.Y += loc.Y;
@@ -396,25 +441,36 @@ namespace NetToPLCSim
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (m_Conf.Stations.Count == 0)
+            {
                 return;
+            }
 
             if (m_ConfigName == string.Empty)
+            {
                 ChoseSaveFile();
+            }
             else
+            {
                 SaveConfigToFile(m_ConfigName);
+            }
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (m_Conf.Stations.Count == 0)
+            {
                 return;
+            }
+
             ChoseSaveFile();
         }
 
         private void ChoseSaveFile()
         {
-            var saveFileDialog1 = new SaveFileDialog();
-            saveFileDialog1.Filter = "ini files (*.ini)|*.ini|All files (*.*)|*.*";
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog
+            {
+                Filter = "ini files (*.ini)|*.ini|All files (*.*)|*.*"
+            };
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 SaveConfigToFile(saveFileDialog1.FileName);
@@ -425,13 +481,13 @@ namespace NetToPLCSim
 
         private void SaveConfigToFile(string file)
         {
-            var ini = new IniFile(file);
+            IniFile ini = new IniFile(file);
             ini.DeleteFileIfExists();
 
-            var stationNr = 1;
+            int stationNr = 1;
             string section;
 
-            foreach (var st in m_Conf.Stations)
+            foreach (StationData st in m_Conf.Stations)
             {
                 section = "Station_" + stationNr;
                 ini.IniWriteValue(section, "Name", st.Name);
@@ -446,27 +502,34 @@ namespace NetToPLCSim
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var openFileDialog1 = new OpenFileDialog();
-            openFileDialog1.Filter = "ini files (*.ini)|*.ini|All files (*.*)|*.*";
-            if (openFileDialog1.ShowDialog() == DialogResult.OK) LoadIniFile(openFileDialog1.FileName);
+            OpenFileDialog openFileDialog1 = new OpenFileDialog
+            {
+                Filter = "ini files (*.ini)|*.ini|All files (*.*)|*.*"
+            };
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                LoadIniFile(openFileDialog1.FileName);
+            }
         }
 
         private void LoadIniFile(string file)
         {
-            var stationNr = 1;
+            int stationNr = 1;
             string section;
             int rack = 0, slot = 2;
-            var firstOk = false;
-            var readOk = true;
+            bool firstOk = false;
+            bool readOk = true;
             bool err;
 
-            var ini = new IniFile(file);
+            IniFile ini = new IniFile(file);
             while (readOk)
             {
                 err = false;
                 section = "Station_" + stationNr;
-                var station = new StationData();
-                station.Name = ini.IniReadValue(section, "Name");
+                StationData station = new StationData
+                {
+                    Name = ini.IniReadValue(section, "Name")
+                };
 
                 if (station.Name == string.Empty)
                 {
@@ -479,9 +542,13 @@ namespace NetToPLCSim
                     station.NetworkIpAddress = IPAddress.Parse(ini.IniReadValue(section, "NetworkIpAddress"));
                     station.PlcsimIpAddress = IPAddress.Parse(ini.IniReadValue(section, "PlcsimIpAddress"));
                     if (ini.IniReadValue(section, "TsapCheckEnabled") == "True")
+                    {
                         station.TsapCheckEnabled = true;
+                    }
                     else
+                    {
                         station.TsapCheckEnabled = false;
+                    }
 
                     rack = Convert.ToInt32(ini.IniReadValue(section, "PlcsimRackNumber"));
                     slot = Convert.ToInt32(ini.IniReadValue(section, "PlcsimSlotNumber"));
@@ -518,30 +585,38 @@ namespace NetToPLCSim
 
         private void infoToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            var dlg = new FormInfoDialog();
+            FormInfoDialog dlg = new FormInfoDialog();
             dlg.ShowDialog();
         }
 
         private void stopS7DOSHelperServiceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(m_IEPGhelperServiceName))
+            {
                 if (Tools.StopService(m_IEPGhelperServiceName, 20000, false))
+                {
                     m_S7DOSServiceStopped = true;
+                }
+            }
         }
 
         private void startS7DOSHelperServiceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(m_IEPGhelperServiceName))
+            {
                 if (Tools.StartService(m_IEPGhelperServiceName, 20000, false, false))
+                {
                     m_S7DOSServiceStopped = false;
+                }
+            }
         }
 
         private void toolsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var servicename = Tools.GetS7DOSHelperServiceName();
+            string servicename = Tools.GetS7DOSHelperServiceName();
             if (!string.IsNullOrEmpty(servicename))
             {
-                var service = new ServiceController(servicename);
+                ServiceController service = new ServiceController(servicename);
                 if (service.Status == ServiceControllerStatus.Running)
                 {
                     stopS7DOSHelperServiceToolStripMenuItem.Enabled = true;
@@ -562,22 +637,29 @@ namespace NetToPLCSim
 
         private void MonitorServer()
         {
-            var selectedRow = GetSelectedDgvRow(dgvStations);
+            int selectedRow = GetSelectedDgvRow(dgvStations);
 
-            if (selectedRow < 0) return;
+            if (selectedRow < 0)
+            {
+                return;
+            }
 
-            foreach (var srv in m_servers)
+            foreach (IsoToS7online srv in m_servers)
+            {
                 if (srv.Name == m_Conf.Stations[selectedRow].Name)
                 {
                     StartMonitoringServer(srv);
                     break;
                 }
+            }
         }
 
         private void StartMonitoringServer(IsoToS7online srv)
         {
-            var frmMon = new FormMonitor(srv);
-            frmMon.Text = "Monitoring server '" + srv.Name + "' on local interface " + srv.NetworkIpAdress + ".";
+            FormMonitor frmMon = new FormMonitor(srv)
+            {
+                Text = "Monitoring server '" + srv.Name + "' on local interface " + srv.NetworkIpAdress + "."
+            };
             frmMon.Show();
         }
 
@@ -588,33 +670,47 @@ namespace NetToPLCSim
 
         private bool getPort102back(bool autoclose)
         {
-            var frmGetPort = new FormGetPort102();
-            frmGetPort.AutoCloseOnSuccess = autoclose;
+            FormGetPort102 frmGetPort = new FormGetPort102
+            {
+                AutoCloseOnSuccess = autoclose
+            };
             frmGetPort.ShowDialog();
             if (Tools.IsTcpPortAvailable(102))
+            {
                 toolStripStatusLabel3.Text = "Port 102 OK";
+            }
             else
+            {
                 toolStripStatusLabel3.Text = "Port 102 not available!";
+            }
 
             return frmGetPort.Success;
         }
 
         private void manualdeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var helpFileName = @"NetToPLCsim-Manual-de.chm";
+            string helpFileName = @"NetToPLCsim-Manual-de.chm";
             if (File.Exists(helpFileName))
+            {
                 Help.ShowHelp(this, helpFileName);
+            }
             else
+            {
                 MessageBox.Show("Sorry, couldn't open the german NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void manualenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var helpFileName = @"NetToPLCsim-Manual-en.chm";
+            string helpFileName = @"NetToPLCsim-Manual-en.chm";
             if (File.Exists(helpFileName))
+            {
                 Help.ShowHelp(this, helpFileName);
+            }
             else
+            {
                 MessageBox.Show("Sorry, couldn't open the english NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void dgvStations_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
@@ -634,7 +730,7 @@ namespace NetToPLCSim
 
         private void modifyButtonsCheck()
         {
-            var selectetRow = GetSelectedDgvRow(dgvStations);
+            int selectetRow = GetSelectedDgvRow(dgvStations);
             if (dgvStations.RowCount == 0 || selectetRow < 0)
             {
                 btnModify.Enabled = false;
@@ -644,7 +740,7 @@ namespace NetToPLCSim
             }
             else if (selectetRow >= 0)
             {
-                var enable = btnStartServer.Enabled;
+                bool enable = btnStartServer.Enabled;
                 btnModify.Enabled = enable;
                 btnDelete.Enabled = enable;
                 deleteToolStripMenuItem.Enabled = enable;

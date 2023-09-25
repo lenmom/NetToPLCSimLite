@@ -22,13 +22,21 @@ namespace NetToPLCSimLite.Services
         #region Field
 
         private readonly ILog log = LogExt.log;
-        private readonly ConcurrentDictionary<string, IsoToS7online> s7ServerList = new ConcurrentDictionary<string, IsoToS7online>();
+        private readonly ConcurrentDictionary<string, IsoToS7online> s7ServerList =
+                                        new ConcurrentDictionary<string, IsoToS7online>();
+        private readonly List<IS7Protocol> m_PlcSimList = new List<IS7Protocol>();
 
         #endregion
 
         #region Property
 
-        public List<S7Protocol> PlcSimList { get; } = new List<S7Protocol>();
+        public List<IS7Protocol> PlcSimList
+        {
+            get
+            {
+                return m_PlcSimList;
+            }
+        }
 
         #endregion
 
@@ -95,19 +103,19 @@ namespace NetToPLCSimLite.Services
             return ret;
         }
 
-        public List<S7Protocol> SetStation(IReadOnlyCollection<S7Protocol> list)
+        public List<IS7Protocol> SetStation(IReadOnlyCollection<IS7Protocol> list)
         {
             try
             {
                 log.Debug($"=== Received S7 PLCSim List ===");
-                List<S7Protocol> adding = new List<S7Protocol>();
-                List<S7Protocol> original = new List<S7Protocol>();
+                List<IS7Protocol> adding = new List<IS7Protocol>();
+                List<IS7Protocol> original = new List<IS7Protocol>();
                 if (list != null)
                 {
-                    foreach (S7Protocol plc in list)
+                    foreach (IS7Protocol plc in list)
                     {
                         original.Add(plc);
-                        S7Protocol exist = PlcSimList.FirstOrDefault(x => x.Ip == plc.Ip);
+                        IS7Protocol exist = PlcSimList.FirstOrDefault(x => x.Ip == plc.Ip);
                         if (exist == null)
                         {
                             adding.Add(plc);
@@ -119,10 +127,10 @@ namespace NetToPLCSimLite.Services
                 log.Debug("==============================");
 
                 log.Debug($"=== Before S7 PLCSim List ===");
-                List<S7Protocol> removing = new List<S7Protocol>();
-                foreach (S7Protocol plc in PlcSimList)
+                List<IS7Protocol> removing = new List<IS7Protocol>();
+                foreach (IS7Protocol plc in PlcSimList)
                 {
-                    S7Protocol exist = original.FirstOrDefault(x => x.Ip == plc.Ip);
+                    IS7Protocol exist = original.FirstOrDefault(x => x.Ip == plc.Ip);
                     if (exist == null)
                     {
                         removing.Add(plc);
@@ -134,16 +142,16 @@ namespace NetToPLCSimLite.Services
 
                 if (adding.Count > 0)
                 {
-                    List<S7Protocol> ret = AddStation(adding);
+                    List<IS7Protocol> ret = AddStation(adding);
                     PlcSimList.AddRange(ret);
                 }
 
                 if (removing.Count > 0)
                 {
-                    List<S7Protocol> ret = RemoveStation(removing);
+                    List<IS7Protocol> ret = RemoveStation(removing);
                     for (int i = 0; i < ret.Count; i++)
                     {
-                        S7Protocol item = ret[i];
+                        IS7Protocol item = ret[i];
                         PlcSimList.Remove(item);
                         item = null;
                     }
@@ -156,7 +164,7 @@ namespace NetToPLCSimLite.Services
             finally
             {
                 log.Debug($"=== After S7 PLCSim List ===");
-                foreach (S7Protocol item in PlcSimList)
+                foreach (IS7Protocol item in PlcSimList)
                 {
                     log.Debug(item.ToString());
                 }
@@ -190,9 +198,9 @@ namespace NetToPLCSimLite.Services
 
         #region Private Method
 
-        private List<S7Protocol> AddStation(IReadOnlyCollection<S7Protocol> adding)
+        private List<IS7Protocol> AddStation(IReadOnlyCollection<IS7Protocol> adding)
         {
-            List<S7Protocol> ret = new List<S7Protocol>();
+            List<IS7Protocol> ret = new List<IS7Protocol>();
             if (adding == null)
             {
                 return ret;
@@ -201,7 +209,7 @@ namespace NetToPLCSimLite.Services
             try
             {
                 log.Info($"=== Adding S7 PLCSim List ===");
-                foreach (S7Protocol item in adding)
+                foreach (IS7Protocol item in adding)
                 {
                     List<byte[]> tsaps = new List<byte[]>();
                     byte tsap2 = (byte)((item.Rack << 4) | item.Slot);
@@ -209,30 +217,30 @@ namespace NetToPLCSimLite.Services
                     tsaps.Add(new byte[] { 0x02, tsap2 });
                     tsaps.Add(new byte[] { 0x03, tsap2 });
 
-                    IsoToS7online srv = null;
+                    IsoToS7online isoToS7onlineService = null;
                     try
                     {
-                        srv = new IsoToS7online(false);
+                        isoToS7onlineService = new IsoToS7online(false);
                         IPAddress ip = IPAddress.Parse(item.Ip);
                         string err = string.Empty;
-                        bool srvStart = srv.start(item.Name, ip, tsaps, ip, item.Rack, item.Slot, ref err);
+                        bool srvStart = isoToS7onlineService.Start(item.Name, ip, tsaps, ip, item.Rack, item.Slot, ref err);
                         if (srvStart)
                         {
                             bool conn = item.Connect();
                             if (conn)
                             {
-                                srv.DataReceived = item.DataReceived;
-                                s7ServerList.TryAdd(item.Ip, srv);
+                                isoToS7onlineService.DataReceived = item.DataReceived;
+                                s7ServerList.TryAdd(item.Ip, isoToS7onlineService);
 
                                 ret.Add(item);
-                                item.OnError = new Action<string>((ipp) => OnS7ProtocalError_Handler(ipp));
-
+                                //item.OnError += new Action<string>((ipp) => OnS7ProtocalError_Handler(ipp));
+                                item.OnError += OnS7ProtocalError_Handler;
                                 log.Info($"OK, {item.ToString()}");
                             }
                             else
                             {
-                                srv?.Dispose();
-                                srv = null;
+                                isoToS7onlineService?.Dispose();
+                                isoToS7onlineService = null;
                                 item?.Dispose();
                                 log.Warn($"NG, {item.ToString()}");
                             }
@@ -244,8 +252,8 @@ namespace NetToPLCSimLite.Services
                     }
                     catch (Exception ex)
                     {
-                        srv?.Dispose();
-                        srv = null;
+                        isoToS7onlineService?.Dispose();
+                        isoToS7onlineService = null;
                         item?.Dispose();
                         log.Error($"ERR, {item.ToString()}", ex);
                     }
@@ -259,9 +267,9 @@ namespace NetToPLCSimLite.Services
             return ret;
         }
 
-        private List<S7Protocol> RemoveStation(IReadOnlyCollection<S7Protocol> removing)
+        private List<IS7Protocol> RemoveStation(IReadOnlyCollection<IS7Protocol> removing)
         {
-            List<S7Protocol> ret = new List<S7Protocol>();
+            List<IS7Protocol> ret = new List<IS7Protocol>();
             if (removing == null)
             {
                 return ret;
@@ -270,7 +278,7 @@ namespace NetToPLCSimLite.Services
             try
             {
                 log.Info($"=== Removing S7 PLCSim List ===");
-                foreach (S7Protocol item in removing)
+                foreach (IS7Protocol item in removing)
                 {
                     try
                     {
@@ -279,10 +287,15 @@ namespace NetToPLCSimLite.Services
                             srv?.Dispose();
                             srv = null;
                         }
-                        item?.Dispose();
 
-                        ret.Add(item);
-                        log.Info($"OK, {item.ToString()}");
+                        if (item != null)
+                        {
+                            item.OnError -= OnS7ProtocalError_Handler;
+                            item.Dispose();
+
+                            ret.Add(item);
+                            log.Info($"OK, {item.ToString()}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -312,7 +325,7 @@ namespace NetToPLCSimLite.Services
 
             lock (PlcSimList)
             {
-                S7Protocol protocolOnError = PlcSimList.FirstOrDefault(x => !x.IsConnected && x.Ip == ip);
+                IS7Protocol protocolOnError = PlcSimList.FirstOrDefault(x => !x.IsConnected && x.Ip == ip);
                 if (protocolOnError != null && s7ServerList.TryRemove(protocolOnError.Ip, out IsoToS7online isoToS7onlineSvc))
                 {
                     isoToS7onlineSvc?.Dispose();

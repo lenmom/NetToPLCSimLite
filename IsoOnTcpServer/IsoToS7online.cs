@@ -72,7 +72,13 @@ namespace IsoOnTcp
         #region Public Method
 
         // JYB: void -> bool
-        public bool start(string name, IPAddress networkIpAdress, List<byte[]> tsaps, IPAddress plcsimIp, int plcsimRackNumber, int plcsimSlotNumber, ref string error)
+        public bool Start(string name, 
+                          IPAddress networkIpAdress, 
+                          List<byte[]> tsaps, 
+                          IPAddress plcsimIp, 
+                          int plcsimRackNumber, 
+                          int plcsimSlotNumber, 
+                          ref string error)
         {
             m_Provider = new IsoServiceProvider();
             m_Provider.ISOsrv.OnReceived = this.IsoReceived;
@@ -90,7 +96,7 @@ namespace IsoOnTcp
             return ret;
         }
 
-        public void stop()
+        public void Stop()
         {
             m_Server.Stop();
             m_Server = null;
@@ -177,7 +183,7 @@ namespace IsoOnTcp
                 {
                     try
                     {
-                        stop();
+                        Stop();
                     }
                     catch (Exception)
                     {

@@ -21,18 +21,30 @@ namespace NetToPLCSim
 
         public bool IsStationNameUnique(string name)
         {
-            foreach (var st in Stations)
+            foreach (StationData st in Stations)
+            {
                 if (st.Name == name)
+                {
                     return false;
+                }
+            }
+
             return true;
         }
 
         public bool IsStationNameUniqueExcept(string name, int index)
         {
-            for (var i = 0; i < Stations.Count; i++)
+            for (int i = 0; i < Stations.Count; i++)
+            {
                 if (i != index)
+                {
                     if (Stations[i].Name == name)
+                    {
                         return false;
+                    }
+                }
+            }
+
             return true;
         }
     }

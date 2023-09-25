@@ -40,37 +40,43 @@ namespace NetToPLCSim
 
         private void setToolTipText()
         {
-            var toolTip = new ToolTip();
+            ToolTip toolTip = new ToolTip();
             toolTip.SetToolTip(btnChoseNetworkIp, "Browse available network interface IP addresses");
             toolTip.SetToolTip(btnChosePlcsimIp, "Browse available TCP/IP Plcsim Simulations");
         }
 
         private void btnChoseNetworkIp_Click(object sender, EventArgs e)
         {
-            var dlg = new FormLocalIpAdressDialog();
-            var btn = (Button) sender;
-            var parentPoint = Location;
+            FormLocalIpAdressDialog dlg = new FormLocalIpAdressDialog();
+            Button btn = (Button)sender;
+            System.Drawing.Point parentPoint = Location;
 
             parentPoint.X += btn.Location.X;
             parentPoint.Y += btn.Location.Y;
             dlg.Location = parentPoint;
 
             dlg.ShowDialog();
-            if (dlg.DialogResult == DialogResult.OK) tbLocalIpAddress.Text = dlg.ChosenIPaddress;
+            if (dlg.DialogResult == DialogResult.OK)
+            {
+                tbLocalIpAddress.Text = dlg.ChosenIPaddress;
+            }
         }
 
         private void btnChosePlcsimIp_Click(object sender, EventArgs e)
         {
-            var dlg = new FormPlcsimIpAddressDialog();
-            var btn = (Button) sender;
-            var parentPoint = Location;
+            FormPlcsimIpAddressDialog dlg = new FormPlcsimIpAddressDialog();
+            Button btn = (Button)sender;
+            System.Drawing.Point parentPoint = Location;
 
             parentPoint.X += btn.Location.X;
             parentPoint.Y += btn.Location.Y;
             dlg.Location = parentPoint;
 
             dlg.ShowDialog();
-            if (dlg.DialogResult == DialogResult.OK) tbPlcsimIpAddress.Text = dlg.ChosenIPaddress;
+            if (dlg.DialogResult == DialogResult.OK)
+            {
+                tbPlcsimIpAddress.Text = dlg.ChosenIPaddress;
+            }
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -125,13 +131,18 @@ namespace NetToPLCSim
 
         public bool IsValidIP(string addr)
         {
-            var pattern = @"^(([01]?\d\d?|2[0-4]\d|25[0-5])\.){3}([01]?\d\d?|25[0-5]|2[0-4]\d)$";
-            var check = new Regex(pattern);
-            var valid = false;
+            string pattern = @"^(([01]?\d\d?|2[0-4]\d|25[0-5])\.){3}([01]?\d\d?|25[0-5]|2[0-4]\d)$";
+            Regex check = new Regex(pattern);
+            bool valid = false;
             if (addr == string.Empty)
+            {
                 valid = false;
+            }
             else
+            {
                 valid = check.IsMatch(addr, 0);
+            }
+
             return valid;
         }
     }

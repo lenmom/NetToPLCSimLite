@@ -55,13 +55,16 @@ namespace NetToPLCSim
 
         public void parseCmdLineArgs(string[] args)
         {
-            var i = 0;
+            int i = 0;
             string opt;
 
-            foreach (var arg in args)
+            foreach (string arg in args)
             {
                 i++;
-                if (i == 1) continue;
+                if (i == 1)
+                {
+                    continue;
+                }
 
                 if (arg == "-help" || arg == "--help" || arg == "-?")
                 {
@@ -71,8 +74,13 @@ namespace NetToPLCSim
                 {
                     opt = arg.Substring(3, arg.Length - 3).ToUpper();
                     if (opt == "YES")
+                    {
                         AutoStopService = eAutoStopService.YES;
-                    else if (opt == "NO") AutoStopService = eAutoStopService.NO;
+                    }
+                    else if (opt == "NO")
+                    {
+                        AutoStopService = eAutoStopService.NO;
+                    }
                 }
                 else if (arg == "-autostart")
                 {
@@ -88,22 +96,34 @@ namespace NetToPLCSim
                     else if (i == 2) // When as first parameter a filename is given, an ini file was dropped on nettoplcsim.exe
                     {
                         opt = arg.ToUpper();
-                        if (opt.EndsWith(".INI")) StartIni = arg;
+                        if (opt.EndsWith(".INI"))
+                        {
+                            StartIni = arg;
+                        }
                     }
 
                     // Check if full path is given, otherwise extend with working directory
-                    if (StartIni.StartsWith(Environment.CurrentDirectory) == false) StartIni = Environment.CurrentDirectory + "\\" + StartIni;
-                    if (File.Exists(StartIni) == false) StartIni = string.Empty;
+                    if (StartIni.StartsWith(Environment.CurrentDirectory) == false)
+                    {
+                        StartIni = Environment.CurrentDirectory + "\\" + StartIni;
+                    }
+
+                    if (File.Exists(StartIni) == false)
+                    {
+                        StartIni = string.Empty;
+                    }
                 }
             }
 
             if (StartIni == string.Empty) // if no ini file is given, disable autostart as it's not possible
+            {
                 AutoStart = eAutoStart.NO;
+            }
         }
 
         public string getHelpText()
         {
-            var text =
+            string text =
                 "NetToPLCSim - A network interface to Plcsim." + Environment.NewLine +
                 Environment.NewLine +
                 "Command line options:" + Environment.NewLine +

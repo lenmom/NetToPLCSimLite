@@ -34,7 +34,10 @@ namespace Ini
 
         public void DeleteFileIfExists()
         {
-            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
         }
 
         public void IniWriteValue(string Section, string Key, string Value)
@@ -44,8 +47,8 @@ namespace Ini
 
         public string IniReadValue(string Section, string Key)
         {
-            var temp = new StringBuilder(255);
-            var i = GetPrivateProfileString(Section, Key, "", temp, 255, path);
+            StringBuilder temp = new StringBuilder(255);
+            int i = GetPrivateProfileString(Section, Key, "", temp, 255, path);
             return temp.ToString();
         }
     }

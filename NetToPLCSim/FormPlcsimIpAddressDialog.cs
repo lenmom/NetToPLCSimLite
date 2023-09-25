@@ -33,12 +33,12 @@ namespace NetToPLCSim
             listBoxPlcsimIpAddresses.Items.Clear();
             try
             {
-                var s7o = new IsoOnTcp.PlcsimS7online.PlcS7onlineMsgPumpS7(IPAddress.None, 0, 0);
+                PlcS7onlineMsgPumpS7 s7o = new IsoOnTcp.PlcsimS7online.PlcS7onlineMsgPumpS7(IPAddress.None, 0, 0);
                 List<string> partners;
-                var n = 0;
+                int n = 0;
 
                 partners = s7o.ListReachablePartners();
-                foreach (var p in partners)
+                foreach (string p in partners)
                 {
                     n++;
                     listBoxPlcsimIpAddresses.Items.Add(p);
@@ -83,7 +83,7 @@ namespace NetToPLCSim
         {
             if (listBoxPlcsimIpAddresses.SelectedItem != null)
             {
-                var sel = listBoxPlcsimIpAddresses.SelectedItem.ToString();
+                string sel = listBoxPlcsimIpAddresses.SelectedItem.ToString();
                 ChosenIPaddress = sel.Substring(0, sel.IndexOf(" "));
                 DialogResult = DialogResult.OK;
                 Close();
@@ -92,7 +92,10 @@ namespace NetToPLCSim
 
         private void listBoxPlcsimIpAddresses_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (listBoxPlcsimIpAddresses.SelectedItem != null) btnOK.Enabled = true;
+            if (listBoxPlcsimIpAddresses.SelectedItem != null)
+            {
+                btnOK.Enabled = true;
+            }
         }
     }
 }
