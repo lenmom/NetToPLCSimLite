@@ -33,7 +33,7 @@ namespace NetToPLCSim
             listBoxPlcsimIpAddresses.Items.Clear();
             try
             {
-                PlcS7onlineMsgPumpS7 s7o = new IsoOnTcp.PlcsimS7online.PlcS7onlineMsgPumpS7(IPAddress.None, 0, 0);
+                IsoOnTcp.PlcsimS7online.PlcS7onlineMsgPumpS7 s7o = new IsoOnTcp.PlcsimS7online.PlcS7onlineMsgPumpS7(IPAddress.None, 0, 0);
                 List<string> partners;
                 int n = 0;
 

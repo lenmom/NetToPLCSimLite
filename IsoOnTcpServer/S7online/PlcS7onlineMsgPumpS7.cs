@@ -18,7 +18,7 @@ using System.Windows.Forms;
 
 namespace IsoOnTcp.PlcsimS7online
 {
-    internal class PlcS7onlineMsgPumpS7 : PlcS7onlineMsgPump
+    public class PlcS7onlineMsgPumpS7 : PlcS7onlineMsgPump
     {
         #region Field
 
@@ -30,7 +30,7 @@ namespace IsoOnTcp.PlcsimS7online
 
         #region Constructor
 
-        internal PlcS7onlineMsgPumpS7(IPAddress plc_ipaddress, int rack, int slot)
+        public PlcS7onlineMsgPumpS7(IPAddress plc_ipaddress, int rack, int slot)
             : base(plc_ipaddress, rack, slot)
         {
             m_opcode6_response1_was_received = false;

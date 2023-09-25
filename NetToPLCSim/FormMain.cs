@@ -219,9 +219,16 @@ namespace NetToPLCSim
 
                 IsoToS7online srv = new IsoToS7online(station.TsapCheckEnabled);
                 m_servers.Add(srv);
+                string error=null;
                 try
                 {
-                    srv.start(station.Name, station.NetworkIpAddress, tsaps, station.PlcsimIpAddress, station.PlcsimRackNumber, station.PlcsimSlotNumber);
+                    srv.Start(station.Name,
+                              station.NetworkIpAddress,
+                              tsaps,
+                              station.PlcsimIpAddress,
+                              station.PlcsimRackNumber,
+                              station.PlcsimSlotNumber, 
+                              ref error);
                 }
                 catch
                 {
