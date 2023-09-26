@@ -43,6 +43,8 @@ namespace NetToPLCSim
 
         public eAutoStart AutoStart { get; private set; }
 
+        public bool Visible { get; private set; } = true;
+
         public string StartIni { get; private set; }
 
         private void setDefaults()
@@ -85,6 +87,10 @@ namespace NetToPLCSim
                 else if (arg == "-autostart")
                 {
                     AutoStart = eAutoStart.YES;
+                }
+                else if (arg == "-novisible")
+                {
+                    Visible = false;
                 }
                 else if (arg.StartsWith("-f=") || i == 2)
                 {
@@ -134,7 +140,8 @@ namespace NetToPLCSim
                 "-f=configuration.ini\tStart with this station configuration" + Environment.NewLine +
                 "-s=Option\t\tAutostop IEPG-Helper service" + Environment.NewLine +
                 "\t\tOptions: NO, YES, ASK" + Environment.NewLine +
-                "-autostart\t\tAutostart with configuration file";
+                "-autostart\t\tAutostart with configuration file" + Environment.NewLine+
+                "-novisible \t\tHide main form.";
 
             return text;
         }

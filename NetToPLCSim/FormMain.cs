@@ -146,6 +146,12 @@ namespace NetToPLCSim
             // parse optional command line arguments
             StartArgs.parseCmdLineArgs(Environment.GetCommandLineArgs());
 
+            if (!StartArgs.Visible)
+            {
+                this.Opacity = 0;
+                this.ShowInTaskbar = false;
+            }
+
             if (Tools.IsTcpPortAvailable(102) == false)
             {
                 toolStripStatusLabel3.Text = "Port 102 not available!";
@@ -220,7 +226,7 @@ namespace NetToPLCSim
                 //IsoToS7online srv = new IsoToS7online(station.TsapCheckEnabled);
                 IsoToS7online srv = new IsoToS7online(false);
                 m_servers.Add(srv);
-                string error=null;
+                string error = null;
                 try
                 {
                     srv.Start(station.Name,
@@ -228,7 +234,7 @@ namespace NetToPLCSim
                               tsaps,
                               station.PlcsimIpAddress,
                               station.PlcsimRackNumber,
-                              station.PlcsimSlotNumber, 
+                              station.PlcsimSlotNumber,
                               ref error);
                 }
                 catch
