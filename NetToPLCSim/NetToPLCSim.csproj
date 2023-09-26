@@ -179,6 +179,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\s7onlinx.dll">
+      <Link>s7onlinx.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Custard Mite of Glut.ico" />
     <Content Include="Danger Mouse In A Pickle.ico" />
     <Content Include="nettoplcsim_icon.ico" />

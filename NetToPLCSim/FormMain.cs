@@ -144,12 +144,23 @@ namespace NetToPLCSim
         private void FormMain_Shown(object sender, EventArgs e)
         {
             // parse optional command line arguments
+            string[] args = Environment.GetCommandLineArgs();
+            if (args != null && args.Length < 2)
+            {
+                Application.Exit();
+            }
+
             StartArgs.parseCmdLineArgs(Environment.GetCommandLineArgs());
 
             if (!StartArgs.Visible)
             {
                 this.Opacity = 0;
                 this.ShowInTaskbar = false;
+            }
+            else
+            {
+                this.Opacity = 100;
+                this.ShowInTaskbar = true;
             }
 
             if (Tools.IsTcpPortAvailable(102) == false)

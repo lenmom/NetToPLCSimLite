@@ -22,6 +22,12 @@ namespace NetToPLCSim
         [STAThread]
         private static void Main()
         {
+            string[] args = Environment.GetCommandLineArgs();
+            if (args != null && args.Length < 2)
+            {
+                Application.Exit();
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.ThreadException += Application_ThreadException;
