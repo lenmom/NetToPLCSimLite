@@ -8,7 +8,7 @@ using S7PROSIMLib;
 
 namespace NetToPLCSimLite.Models
 {
-    internal class S7Protocol : IS7Protocol
+    public class S7Protocol : IS7Protocol
     {
         #region Const
 

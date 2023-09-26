@@ -217,7 +217,8 @@ namespace NetToPLCSim
                 tsaps.Add(new byte[] { 0x02, tsap2 });
                 tsaps.Add(new byte[] { 0x03, tsap2 });
 
-                IsoToS7online srv = new IsoToS7online(station.TsapCheckEnabled);
+                //IsoToS7online srv = new IsoToS7online(station.TsapCheckEnabled);
+                IsoToS7online srv = new IsoToS7online(false);
                 m_servers.Add(srv);
                 string error=null;
                 try

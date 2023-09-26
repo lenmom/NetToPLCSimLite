@@ -35,7 +35,10 @@ namespace NetToPLCSim
             NetworkInterface[] intf = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface device in intf)
             {
-                if (device.NetworkInterfaceType.Equals(NetworkInterfaceType.Ethernet))
+                if ((device.NetworkInterfaceType.Equals(NetworkInterfaceType.Ethernet) ||
+                    device.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
+                    device.NetworkInterfaceType == NetworkInterfaceType.Loopback) &&
+                    device.OperationalStatus == OperationalStatus.Up)
                 {
                     foreach (UnicastIPAddressInformation addressInformation in device.GetIPProperties().UnicastAddresses)
                     {
