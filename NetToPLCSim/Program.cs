@@ -20,9 +20,9 @@ namespace NetToPLCSim
     internal static class Program
     {
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
-            string[] args = Environment.GetCommandLineArgs();
+            //string[] args = Environment.GetCommandLineArgs();
             if (args != null && args.Length < 2)
             {
                 Application.Exit();

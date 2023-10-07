@@ -27,6 +27,8 @@ namespace NetToPLCSim
 {
     public partial class FormMain : Form
     {
+        #region Field
+
         private readonly Config m_Conf = new Config();
         private readonly List<IsoToS7online> m_servers = new List<IsoToS7online>();
 
@@ -36,10 +38,18 @@ namespace NetToPLCSim
         private string m_IEPGhelperServiceName = string.Empty;
         private bool m_S7DOSServiceStopped;
 
+        #endregion
+
+        #region Constructor
+
         public FormMain()
         {
             InitializeComponent();
         }
+
+        #endregion
+
+        #region Event Handler
 
         private void FormMain_Load(object sender, EventArgs e)
         {
@@ -67,78 +77,6 @@ namespace NetToPLCSim
                     m_S7DOSServiceStopped = false;
                 }
             }
-        }
-
-        private void SetToolTipText()
-        {
-            ToolTip toolTip = new ToolTip();
-            toolTip.SetToolTip(btnStartServer, "Start NetToPLCsim server");
-            toolTip.SetToolTip(btnStopServer, "Stop NetToPLCsim server");
-            toolTip.SetToolTip(btnAdd, "Add a new station to configuration");
-            toolTip.SetToolTip(btnModify, "Modify the selected station configuration");
-            toolTip.SetToolTip(btnDelete, "Delete the selected station from list");
-        }
-
-        private void SetHelpShortcutKeys()
-        {
-            if (Application.CurrentCulture.Name == "de-DE")
-            {
-                manualdeToolStripMenuItem.ShortcutKeys = Keys.F1;
-                manualenToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.F1;
-            }
-            else
-            {
-                manualdeToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.F1;
-                manualenToolStripMenuItem.ShortcutKeys = Keys.F1;
-            }
-        }
-
-        private void InitStationDataGridView()
-        {
-            dgvStations.AutoGenerateColumns = false;
-
-            DataGridViewTextBoxColumn nameColumn = new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "Name",
-                HeaderText = "Name",
-                Width = 110
-            };
-
-            DataGridViewTextBoxColumn netipColumn = new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "NetworkIpAddress",
-                HeaderText = "Network address",
-                Width = 120
-            };
-
-            DataGridViewTextBoxColumn plcsimipColumn = new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "PlcsimIpAddress",
-                HeaderText = "Plcsim address",
-                Width = 120
-            };
-
-            DataGridViewTextBoxColumn rackSlotColumn = new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "PlcsimRackSlot",
-                HeaderText = "Rack/Slot",
-                Width = 30
-            };
-
-            DataGridViewTextBoxColumn statusColumn = new DataGridViewTextBoxColumn
-            {
-                DataPropertyName = "Status",
-                HeaderText = "Status",
-                Width = 111
-            };
-
-            dgvStations.Columns.Add(nameColumn);
-            dgvStations.Columns.Add(netipColumn);
-            dgvStations.Columns.Add(plcsimipColumn);
-            dgvStations.Columns.Add(rackSlotColumn);
-            dgvStations.Columns.Add(statusColumn);
-
-            dgvStations.DataSource = m_Conf.Stations;
         }
 
         private void FormMain_Shown(object sender, EventArgs e)
@@ -217,11 +155,6 @@ namespace NetToPLCSim
             }
         }
 
-        private void SetFormText(string file)
-        {
-            Text = "NetToPLCsim::s7o - [" + file + "]";
-        }
-
         private void btnStartServer_Click(object sender, EventArgs e)
         {
             bool oneStationWasStarted = false;
@@ -272,6 +205,283 @@ namespace NetToPLCSim
             StopServer();
         }
 
+        private void btnNewStation_Click(object sender, EventArgs e)
+        {
+            Control c = (Control)sender;
+            AddNewStation(c.Location);
+        }
+
+        private void newToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Point loc = new Point
+            {
+                X = Width / 4,
+                Y = Height / 4
+            };
+            AddNewStation(loc);
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            Point loc = new Point
+            {
+                X = Width / 4,
+                Y = Height / 4
+            };
+            AddNewStation(loc);
+        }
+
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DeleteSelectedStations();
+        }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            DeleteSelectedStations();
+        }
+
+        private void modifyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ModifyStation();
+        }
+
+        private void btnModify_Click(object sender, EventArgs e)
+        {
+            ModifyStation();
+        }
+
+        private void dgvStations_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (btnModify.Enabled)
+            {
+                ModifyStation();
+            }
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (m_Conf.Stations.Count == 0)
+            {
+                return;
+            }
+
+            if (m_ConfigName == string.Empty)
+            {
+                ChoseSaveFile();
+            }
+            else
+            {
+                SaveConfigToFile(m_ConfigName);
+            }
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (m_Conf.Stations.Count == 0)
+            {
+                return;
+            }
+
+            ChoseSaveFile();
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog1 = new OpenFileDialog
+            {
+                Filter = "ini files (*.ini)|*.ini|All files (*.*)|*.*"
+            };
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                LoadIniFile(openFileDialog1.FileName);
+            }
+        }
+
+        private void infoToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            FormInfoDialog dlg = new FormInfoDialog();
+            dlg.ShowDialog();
+        }
+
+        private void stopS7DOSHelperServiceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(m_IEPGhelperServiceName))
+            {
+                if (Tools.StopService(m_IEPGhelperServiceName, 20000, false))
+                {
+                    m_S7DOSServiceStopped = true;
+                }
+            }
+        }
+
+        private void startS7DOSHelperServiceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(m_IEPGhelperServiceName))
+            {
+                if (Tools.StartService(m_IEPGhelperServiceName, 20000, false, false))
+                {
+                    m_S7DOSServiceStopped = false;
+                }
+            }
+        }
+
+        private void toolsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string servicename = Tools.GetS7DOSHelperServiceName();
+            if (!string.IsNullOrEmpty(servicename))
+            {
+                ServiceController service = new ServiceController(servicename);
+                if (service.Status == ServiceControllerStatus.Running)
+                {
+                    stopS7DOSHelperServiceToolStripMenuItem.Enabled = true;
+                    startS7DOSHelperServiceToolStripMenuItem.Enabled = false;
+                }
+                else
+                {
+                    stopS7DOSHelperServiceToolStripMenuItem.Enabled = false;
+                    startS7DOSHelperServiceToolStripMenuItem.Enabled = true;
+                }
+            }
+        }
+
+        private void monitorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MonitorServer();
+        }
+
+        private void getPort102ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            getPort102back(false);
+        }
+
+        private void manualdeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string helpFileName = @"NetToPLCsim-Manual-de.chm";
+            if (File.Exists(helpFileName))
+            {
+                Help.ShowHelp(this, helpFileName);
+            }
+            else
+            {
+                MessageBox.Show("Sorry, couldn't open the german NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void manualenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string helpFileName = @"NetToPLCsim-Manual-en.chm";
+            if (File.Exists(helpFileName))
+            {
+                Help.ShowHelp(this, helpFileName);
+            }
+            else
+            {
+                MessageBox.Show("Sorry, couldn't open the english NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void dgvStations_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            modifyButtonsCheck();
+        }
+
+        private void dgvStations_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        {
+            modifyButtonsCheck();
+        }
+
+        private void dgvStations_SelectionChanged(object sender, EventArgs e)
+        {
+            modifyButtonsCheck();
+        }
+
+        #endregion
+
+        #region  Private Method
+
+        private void SetToolTipText()
+        {
+            ToolTip toolTip = new ToolTip();
+            toolTip.SetToolTip(btnStartServer, "Start NetToPLCsim server");
+            toolTip.SetToolTip(btnStopServer, "Stop NetToPLCsim server");
+            toolTip.SetToolTip(btnAdd, "Add a new station to configuration");
+            toolTip.SetToolTip(btnModify, "Modify the selected station configuration");
+            toolTip.SetToolTip(btnDelete, "Delete the selected station from list");
+        }
+
+        private void SetHelpShortcutKeys()
+        {
+            if (Application.CurrentCulture.Name == "de-DE")
+            {
+                manualdeToolStripMenuItem.ShortcutKeys = Keys.F1;
+                manualenToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.F1;
+            }
+            else
+            {
+                manualdeToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.F1;
+                manualenToolStripMenuItem.ShortcutKeys = Keys.F1;
+            }
+        }
+
+        private void InitStationDataGridView()
+        {
+            dgvStations.AutoGenerateColumns = false;
+
+            DataGridViewTextBoxColumn nameColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Name",
+                HeaderText = "Name",
+                Width = 110
+            };
+
+            DataGridViewTextBoxColumn netipColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "NetworkIpAddress",
+                HeaderText = "Network address",
+                Width = 120
+            };
+
+            DataGridViewTextBoxColumn plcsimipColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "PlcsimIpAddress",
+                HeaderText = "Plcsim address",
+                Width = 120
+            };
+
+            DataGridViewTextBoxColumn rackSlotColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "PlcsimRackSlot",
+                HeaderText = "Rack/Slot",
+                Width = 30
+            };
+
+            DataGridViewTextBoxColumn statusColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Status",
+                HeaderText = "Status",
+                Width = 111
+            };
+
+            dgvStations.Columns.Add(nameColumn);
+            dgvStations.Columns.Add(netipColumn);
+            dgvStations.Columns.Add(plcsimipColumn);
+            dgvStations.Columns.Add(rackSlotColumn);
+            dgvStations.Columns.Add(statusColumn);
+
+            dgvStations.DataSource = m_Conf.Stations;
+        }
+
+        private void SetFormText(string file)
+        {
+            Text = "NetToPLCsim::s7o - [" + file + "]";
+        }
+
         private void StopServer()
         {
             foreach (IsoToS7online srv in m_servers)
@@ -300,12 +510,6 @@ namespace NetToPLCSim
             modifyToolStripMenuItem.Enabled = enable;
             btnStartServer.Enabled = enable;
             btnStopServer.Enabled = !enable;
-        }
-
-        private void btnNewStation_Click(object sender, EventArgs e)
-        {
-            Control c = (Control)sender;
-            AddNewStation(c.Location);
         }
 
         private void AddNewStation(Point clickPoint)
@@ -352,60 +556,12 @@ namespace NetToPLCSim
             }
         }
 
-        private void newToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Point loc = new Point
-            {
-                X = Width / 4,
-                Y = Height / 4
-            };
-            AddNewStation(loc);
-        }
-
-        private void btnAdd_Click(object sender, EventArgs e)
-        {
-            Point loc = new Point
-            {
-                X = Width / 4,
-                Y = Height / 4
-            };
-            AddNewStation(loc);
-        }
-
-        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DeleteSelectedStations();
-        }
-
-        private void btnDelete_Click(object sender, EventArgs e)
-        {
-            DeleteSelectedStations();
-        }
-
         private void DeleteSelectedStations()
         {
             int selectedRow = GetSelectedDgvRow(dgvStations);
             if (selectedRow >= 0)
             {
                 m_Conf.Stations.RemoveAt(selectedRow);
-            }
-        }
-
-        private void modifyToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ModifyStation();
-        }
-
-        private void btnModify_Click(object sender, EventArgs e)
-        {
-            ModifyStation();
-        }
-
-        private void dgvStations_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (btnModify.Enabled)
-            {
-                ModifyStation();
             }
         }
 
@@ -458,38 +614,6 @@ namespace NetToPLCSim
             }
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (m_Conf.Stations.Count == 0)
-            {
-                return;
-            }
-
-            if (m_ConfigName == string.Empty)
-            {
-                ChoseSaveFile();
-            }
-            else
-            {
-                SaveConfigToFile(m_ConfigName);
-            }
-        }
-
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (m_Conf.Stations.Count == 0)
-            {
-                return;
-            }
-
-            ChoseSaveFile();
-        }
-
         private void ChoseSaveFile()
         {
             SaveFileDialog saveFileDialog1 = new SaveFileDialog
@@ -522,18 +646,6 @@ namespace NetToPLCSim
                 ini.IniWriteValue(section, "PlcsimSlotNumber", st.PlcsimSlotNumber.ToString());
                 ini.IniWriteValue(section, "TsapCheckEnabled", st.TsapCheckEnabled.ToString());
                 stationNr++;
-            }
-        }
-
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog openFileDialog1 = new OpenFileDialog
-            {
-                Filter = "ini files (*.ini)|*.ini|All files (*.*)|*.*"
-            };
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                LoadIniFile(openFileDialog1.FileName);
             }
         }
 
@@ -608,58 +720,6 @@ namespace NetToPLCSim
             }
         }
 
-        private void infoToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            FormInfoDialog dlg = new FormInfoDialog();
-            dlg.ShowDialog();
-        }
-
-        private void stopS7DOSHelperServiceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(m_IEPGhelperServiceName))
-            {
-                if (Tools.StopService(m_IEPGhelperServiceName, 20000, false))
-                {
-                    m_S7DOSServiceStopped = true;
-                }
-            }
-        }
-
-        private void startS7DOSHelperServiceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(m_IEPGhelperServiceName))
-            {
-                if (Tools.StartService(m_IEPGhelperServiceName, 20000, false, false))
-                {
-                    m_S7DOSServiceStopped = false;
-                }
-            }
-        }
-
-        private void toolsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            string servicename = Tools.GetS7DOSHelperServiceName();
-            if (!string.IsNullOrEmpty(servicename))
-            {
-                ServiceController service = new ServiceController(servicename);
-                if (service.Status == ServiceControllerStatus.Running)
-                {
-                    stopS7DOSHelperServiceToolStripMenuItem.Enabled = true;
-                    startS7DOSHelperServiceToolStripMenuItem.Enabled = false;
-                }
-                else
-                {
-                    stopS7DOSHelperServiceToolStripMenuItem.Enabled = false;
-                    startS7DOSHelperServiceToolStripMenuItem.Enabled = true;
-                }
-            }
-        }
-
-        private void monitorToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            MonitorServer();
-        }
-
         private void MonitorServer()
         {
             int selectedRow = GetSelectedDgvRow(dgvStations);
@@ -688,11 +748,6 @@ namespace NetToPLCSim
             frmMon.Show();
         }
 
-        private void getPort102ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            getPort102back(false);
-        }
-
         private bool getPort102back(bool autoclose)
         {
             FormGetPort102 frmGetPort = new FormGetPort102
@@ -710,47 +765,6 @@ namespace NetToPLCSim
             }
 
             return frmGetPort.Success;
-        }
-
-        private void manualdeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            string helpFileName = @"NetToPLCsim-Manual-de.chm";
-            if (File.Exists(helpFileName))
-            {
-                Help.ShowHelp(this, helpFileName);
-            }
-            else
-            {
-                MessageBox.Show("Sorry, couldn't open the german NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void manualenToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            string helpFileName = @"NetToPLCsim-Manual-en.chm";
-            if (File.Exists(helpFileName))
-            {
-                Help.ShowHelp(this, helpFileName);
-            }
-            else
-            {
-                MessageBox.Show("Sorry, couldn't open the english NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void dgvStations_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
-        {
-            modifyButtonsCheck();
-        }
-
-        private void dgvStations_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
-        {
-            modifyButtonsCheck();
-        }
-
-        private void dgvStations_SelectionChanged(object sender, EventArgs e)
-        {
-            modifyButtonsCheck();
         }
 
         private void modifyButtonsCheck()
@@ -772,5 +786,7 @@ namespace NetToPLCSim
                 modifyToolStripMenuItem.Enabled = enable;
             }
         }
+
+        #endregion
     }
 }

@@ -109,12 +109,15 @@ namespace NetToPLCSim
                     }
 
                     // Check if full path is given, otherwise extend with working directory
-                    if (StartIni.StartsWith(Environment.CurrentDirectory) == false)
+                    if (!string.IsNullOrEmpty(StartIni) &&
+                        !File.Exists(StartIni) &&
+                        !StartIni.StartsWith(Environment.CurrentDirectory))
                     {
                         StartIni = Environment.CurrentDirectory + "\\" + StartIni;
                     }
 
-                    if (File.Exists(StartIni) == false)
+                    if (!string.IsNullOrEmpty(StartIni) && 
+                        !File.Exists(StartIni))
                     {
                         StartIni = string.Empty;
                     }
@@ -140,7 +143,7 @@ namespace NetToPLCSim
                 "-f=configuration.ini\tStart with this station configuration" + Environment.NewLine +
                 "-s=Option\t\tAutostop IEPG-Helper service" + Environment.NewLine +
                 "\t\tOptions: NO, YES, ASK" + Environment.NewLine +
-                "-autostart\t\tAutostart with configuration file" + Environment.NewLine+
+                "-autostart\t\tAutostart with configuration file" + Environment.NewLine +
                 "-novisible \t\tHide main form.";
 
             return text;
