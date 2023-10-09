@@ -22,8 +22,7 @@ namespace PLCSimConnector
         [STAThread]
         private static void Main(string[] args)
         {
-            //string[] args = Environment.GetCommandLineArgs();
-            if (args != null && args.Length < 2)
+            if (args == null || args.Length < 1)
             {
                 Application.Exit();
                 return;

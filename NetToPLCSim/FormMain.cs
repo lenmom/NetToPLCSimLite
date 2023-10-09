@@ -45,7 +45,7 @@ namespace PLCSimConnector
         public FormMain(string[] args)
         {
             InitializeComponent();
-            if (args != null && args.Length < 2)
+            if (args == null || args.Length < 1)
             {
                 Application.Exit();
             }
@@ -99,7 +99,7 @@ namespace PLCSimConnector
         {
             // parse optional command line arguments
             string[] args = Environment.GetCommandLineArgs();
-            if (args != null && args.Length < 2)
+            if (args == null || args.Length < 2)
             {
                 Application.Exit();
             }
