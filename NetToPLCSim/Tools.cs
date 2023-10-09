@@ -18,7 +18,7 @@ using System.Windows.Forms;
 
 using TimeoutException = System.ServiceProcess.TimeoutException;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public class Tools
     {

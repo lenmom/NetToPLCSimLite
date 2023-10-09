@@ -16,7 +16,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public partial class FormStationEdit : Form
     {

@@ -14,7 +14,7 @@
 using System.ComponentModel;
 using System.Net;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public class StationData : INotifyPropertyChanged
     {

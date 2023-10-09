@@ -16,7 +16,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Windows.Forms;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public partial class FormLocalIpAdressDialog : Form
     {

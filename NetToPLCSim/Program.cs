@@ -15,7 +15,7 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     internal static class Program
     {
@@ -26,13 +26,14 @@ namespace NetToPLCSim
             if (args != null && args.Length < 2)
             {
                 Application.Exit();
+                return;
             }
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.ThreadException += Application_ThreadException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            Application.Run(new FormMain());
+            Application.Run(new FormMain(args));
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)

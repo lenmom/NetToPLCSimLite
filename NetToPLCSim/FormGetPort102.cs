@@ -19,7 +19,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public partial class FormGetPort102 : Form
     {
@@ -137,7 +137,7 @@ namespace NetToPLCSim
                     lblStatusmessage.ForeColor = Color.Red;
                     lblStatusmessage.Text += "FAILED to start the service!";
                     lblStatusmessage.Refresh();
-                    lblResultmessage.Text = "Remember that you need to start NetToPLCsim" + Environment.NewLine + "with administrative rights to stop the service!";
+                    lblResultmessage.Text = "Remember that you need to start PLCSimConnector" + Environment.NewLine + "with administrative rights to stop the service!";
                     progressBar1.Value = 0;
                     return;
                 }
@@ -172,7 +172,7 @@ namespace NetToPLCSim
                 {
                     lblStatusmessage.Text += "OK. Port 102 is available.";
                     lblResultmessage.ForeColor = Color.Green;
-                    lblResultmessage.Text = "Success! You are ready to use NetToPLCsim :)";
+                    lblResultmessage.Text = "Success! You are ready to use PLCSimConnector :)";
                     lblResultmessage.Refresh();
                     Success = true;
                 }
@@ -190,7 +190,7 @@ namespace NetToPLCSim
                 SystemSounds.Exclamation.Play();
                 lblStatusmessage.ForeColor = Color.Red;
                 lblStatusmessage.Text += "FAILED to stop the service!";
-                lblResultmessage.Text = "Remember that you need to start NetToPLCsim" + Environment.NewLine + "with administrative rights to stop the service!";
+                lblResultmessage.Text = "Remember that you need to start PLCSimConnector" + Environment.NewLine + "with administrative rights to stop the service!";
                 lblStatusmessage.Refresh();
                 progressBar1.Value = 0;
             }

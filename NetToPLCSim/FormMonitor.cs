@@ -18,7 +18,7 @@ using System.Windows.Forms;
 
 using IsoOnTcp;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public partial class FormMonitor : Form
     {

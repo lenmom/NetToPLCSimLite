@@ -11,7 +11,7 @@
  * License, or (at your option) any later version.
  /*********************************************************************/
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public enum StationStatus
     {

@@ -13,7 +13,7 @@
 
 using System.ComponentModel;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     internal class Config
     {

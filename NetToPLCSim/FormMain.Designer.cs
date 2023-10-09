@@ -1,4 +1,4 @@
-﻿namespace NetToPLCSim
+﻿namespace PLCSimConnector
 {
     partial class FormMain
     {
@@ -240,7 +240,7 @@
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(105, 21);
             this.toolStripStatusLabel1.Text = "Version 1.2.4.0  ";
-            this.toolStripStatusLabel1.ToolTipText = "NetToPLCsim Version";
+            this.toolStripStatusLabel1.ToolTipText = "PLCSimConnector Version";
             // 
             // toolStripStatusLabel3
             // 

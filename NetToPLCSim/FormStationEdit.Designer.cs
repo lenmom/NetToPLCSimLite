@@ -1,4 +1,4 @@
-﻿namespace NetToPLCSim
+﻿namespace PLCSimConnector
 {
     partial class FormStationEdit
     {

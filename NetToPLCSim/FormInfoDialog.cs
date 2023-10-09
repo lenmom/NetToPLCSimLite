@@ -14,7 +14,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public partial class FormInfoDialog : Form
     {

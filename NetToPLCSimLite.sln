@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetToPLCSimLite", "NetToPLC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IsoToS7online", "IsoOnTcpServer\IsoToS7online.csproj", "{CC03886B-BED4-4B34-92B1-2F5C2BD658A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetToPLCSim", "NetToPLCSim\NetToPLCSim.csproj", "{31083F11-4753-4237-9121-6EB2FA9B9AEA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PLCSimConnector", "NetToPLCSim\PLCSimConnector.csproj", "{31083F11-4753-4237-9121-6EB2FA9B9AEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

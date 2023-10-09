@@ -23,7 +23,7 @@ using Ini;
 
 using IsoOnTcp;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public partial class FormMain : Form
     {
@@ -32,7 +32,7 @@ namespace NetToPLCSim
         private readonly Config m_Conf = new Config();
         private readonly List<IsoToS7online> m_servers = new List<IsoToS7online>();
 
-        private readonly CmdLineArgs StartArgs = new CmdLineArgs();
+        private readonly CmdLineArgs startArgs = new CmdLineArgs();
 
         private string m_ConfigName = "";
         private string m_IEPGhelperServiceName = string.Empty;
@@ -42,9 +42,25 @@ namespace NetToPLCSim
 
         #region Constructor
 
-        public FormMain()
+        public FormMain(string[] args)
         {
             InitializeComponent();
+            if (args != null && args.Length < 2)
+            {
+                Application.Exit();
+            }
+
+            startArgs.parseCmdLineArgs(args);
+            if (!startArgs.Visible)
+            {
+                this.Opacity = 0;
+                this.ShowInTaskbar = false;
+            }
+            else
+            {
+                this.Opacity = 100;
+                this.ShowInTaskbar = true;
+            }
         }
 
         #endregion
@@ -53,7 +69,7 @@ namespace NetToPLCSim
 
         private void FormMain_Load(object sender, EventArgs e)
         {
-            Text = "NetToPLCsim::s7o";
+            Text = "PLCSimConnector::s7o";
             m_IEPGhelperServiceName = Tools.GetS7DOSHelperServiceName();
             SetToolTipText();
             SetHelpShortcutKeys();
@@ -88,9 +104,7 @@ namespace NetToPLCSim
                 Application.Exit();
             }
 
-            StartArgs.parseCmdLineArgs(Environment.GetCommandLineArgs());
-
-            if (!StartArgs.Visible)
+            if (!startArgs.Visible)
             {
                 this.Opacity = 0;
                 this.ShowInTaskbar = false;
@@ -109,19 +123,19 @@ namespace NetToPLCSim
                 {
                     MessageBox.Show(
                         "Port 102 is in use!\n"
-                        + "Before you can use NetToPLCsim you have to stop the program which uses this port.\n"
+                        + "Before you can use PLCSimConnector you have to stop the program which uses this port.\n"
                         , "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning
                     );
                 }
                 else
                 {
-                    if (StartArgs.AutoStopService == eAutoStopService.ASK)
+                    if (startArgs.AutoStopService == eAutoStopService.ASK)
                     {
                         DialogResult result = MessageBox.Show(
                             "Port 102 is in use!\n\n"
-                            + "Before you can use NetToPLCsim you have to stop the program which uses this port. "
+                            + "Before you can use PLCSimConnector you have to stop the program which uses this port. "
                             + "Seems to be the 'SIMATIC S7DOS Help Service' '" + m_IEPGhelperServiceName + "'\n\n"
-                            + "If you have started NetToPLCsim with administrative rights, the service could automatically be stopped.\n\n"
+                            + "If you have started PLCSimConnector with administrative rights, the service could automatically be stopped.\n\n"
                             + "Try to stop this service?", "Warning", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
 
                         if (result == DialogResult.Yes)
@@ -129,7 +143,7 @@ namespace NetToPLCSim
                             m_S7DOSServiceStopped = getPort102back(false);
                         }
                     }
-                    else if (StartArgs.AutoStopService == eAutoStopService.YES)
+                    else if (startArgs.AutoStopService == eAutoStopService.YES)
                     {
                         m_S7DOSServiceStopped = getPort102back(true);
                     }
@@ -145,10 +159,10 @@ namespace NetToPLCSim
                 toolStripStatusLabel3.Text = "Port 102 OK";
             }
 
-            if (StartArgs.StartIni != string.Empty)
+            if (startArgs.StartIni != string.Empty)
             {
-                LoadIniFile(StartArgs.StartIni);
-                if (StartArgs.AutoStart == eAutoStart.YES)
+                LoadIniFile(startArgs.StartIni);
+                if (startArgs.AutoStart == eAutoStart.YES)
                 {
                     btnStartServer_Click(null, null);
                 }
@@ -362,27 +376,27 @@ namespace NetToPLCSim
 
         private void manualdeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string helpFileName = @"NetToPLCsim-Manual-de.chm";
+            string helpFileName = @"PLCSimConnector-Manual-de.chm";
             if (File.Exists(helpFileName))
             {
                 Help.ShowHelp(this, helpFileName);
             }
             else
             {
-                MessageBox.Show("Sorry, couldn't open the german NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Sorry, couldn't open the german PLCSimConnector helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void manualenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string helpFileName = @"NetToPLCsim-Manual-en.chm";
+            string helpFileName = @"PLCSimConnector-Manual-en.chm";
             if (File.Exists(helpFileName))
             {
                 Help.ShowHelp(this, helpFileName);
             }
             else
             {
-                MessageBox.Show("Sorry, couldn't open the english NetToPLCsim helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Sorry, couldn't open the english PLCSimConnector helpfile.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -408,8 +422,8 @@ namespace NetToPLCSim
         private void SetToolTipText()
         {
             ToolTip toolTip = new ToolTip();
-            toolTip.SetToolTip(btnStartServer, "Start NetToPLCsim server");
-            toolTip.SetToolTip(btnStopServer, "Stop NetToPLCsim server");
+            toolTip.SetToolTip(btnStartServer, "Start PLCSimConnector server");
+            toolTip.SetToolTip(btnStopServer, "Stop PLCSimConnector server");
             toolTip.SetToolTip(btnAdd, "Add a new station to configuration");
             toolTip.SetToolTip(btnModify, "Modify the selected station configuration");
             toolTip.SetToolTip(btnDelete, "Delete the selected station from list");
@@ -479,7 +493,7 @@ namespace NetToPLCSim
 
         private void SetFormText(string file)
         {
-            Text = "NetToPLCsim::s7o - [" + file + "]";
+            Text = "PLCSimConnector::s7o - [" + file + "]";
         }
 
         private void StopServer()

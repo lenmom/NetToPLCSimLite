@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Windows.Forms;
 
-namespace NetToPLCSim
+namespace PLCSimConnector
 {
     public partial class FormPlcsimIpAddressDialog : Form
     {

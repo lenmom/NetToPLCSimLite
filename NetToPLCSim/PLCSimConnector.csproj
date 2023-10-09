@@ -8,8 +8,8 @@
     <ProjectGuid>{31083F11-4753-4237-9121-6EB2FA9B9AEA}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NetToPLCSim</RootNamespace>
-    <AssemblyName>NetToPLCsim</AssemblyName>
+    <RootNamespace>PLCSimConnector</RootNamespace>
+    <AssemblyName>PLCSimConnector</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -52,7 +52,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>NetToPLCSim.Program</StartupObject>
+    <StartupObject>PLCSimConnector.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>sandals.ico</ApplicationIcon>
