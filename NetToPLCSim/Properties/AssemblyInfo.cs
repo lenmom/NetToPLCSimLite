@@ -5,12 +5,10 @@ using System.Runtime.InteropServices;
 // Allgemeine Informationen über eine Assembly werden über die folgenden 
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die mit einer Assembly verknüpft sind.
-[assembly: AssemblyTitle("无敌连接工具")]
-[assembly: AssemblyDescription("Network extension for PLCSIM")]
+[assembly: AssemblyTitle("PLCSim Connector")]
+[assembly: AssemblyDescription("PLCSim Connector for TIA")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("明材")]
-[assembly: AssemblyProduct("无敌连接工具")]
-[assembly: AssemblyCopyright("Copyright ©  2011, 刘争荣")]
+[assembly: AssemblyProduct("PLCSim Connector")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
