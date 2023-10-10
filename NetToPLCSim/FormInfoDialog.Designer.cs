@@ -53,7 +53,7 @@
             this.richTextBoxInfo.ReadOnly = true;
             this.richTextBoxInfo.Size = new System.Drawing.Size(246, 74);
             this.richTextBoxInfo.TabIndex = 6;
-            this.richTextBoxInfo.Text = "强大无比的连接工具";
+            this.richTextBoxInfo.Text = "PLCSim Connector for TIA PLCSim.";
             // 
             // pictureBox1
             // 
