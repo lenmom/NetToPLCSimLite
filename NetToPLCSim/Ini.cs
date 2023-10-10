@@ -26,10 +26,10 @@ namespace Ini
             path = INIPath;
         }
 
-        [DllImport("kernel32")]
+        [DllImport("kernel32", EntryPoint = "WritePrivateProfileString")]
         private static extern long WritePrivateProfileString(string section, string key, string val, string filePath);
 
-        [DllImport("kernel32")]
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileString")]
         private static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retVal, int size, string filePath);
 
         public void DeleteFileIfExists()

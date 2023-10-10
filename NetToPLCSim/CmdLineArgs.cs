@@ -106,13 +106,13 @@ namespace PLCSimConnector
 
                     // Check if full path is given, otherwise extend with working directory
                     if (!string.IsNullOrEmpty(StartIni) &&
-                        !File.Exists(StartIni) &&
+                        (!StartIni.Contains("\\")|| !StartIni.Contains("/")) &&
                         !StartIni.StartsWith(Environment.CurrentDirectory))
                     {
                         StartIni = Environment.CurrentDirectory + "\\" + StartIni;
                     }
 
-                    if (!string.IsNullOrEmpty(StartIni) && 
+                    if (!string.IsNullOrEmpty(StartIni) &&
                         !File.Exists(StartIni))
                     {
                         StartIni = string.Empty;

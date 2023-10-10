@@ -230,7 +230,7 @@ namespace IsoOnTcp
     {
         #region PInvoke 
 
-        [DllImport("user32.dll",EntryPoint = "SendMessage", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("user32.dll", EntryPoint = "SendMessage", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern int SendMessage(IntPtr hwnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         #endregion
