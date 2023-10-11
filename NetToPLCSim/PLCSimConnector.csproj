@@ -55,7 +55,8 @@
     <StartupObject>PLCSimConnector.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>sandals.ico</ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
@@ -79,49 +80,51 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CmdLineArgs.cs" />
-    <Compile Include="Config.cs" />
-    <Compile Include="FormGetPort102.cs">
+    <Compile Include="MVP\FormMainPresenter.cs" />
+    <Compile Include="MVP\Model\CmdLineArgs.cs" />
+    <Compile Include="MVP\IFormMainView.cs" />
+    <Compile Include="MVP\Model\Config.cs" />
+    <Compile Include="DialogForm\FormGetPort102.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormGetPort102.Designer.cs">
+    <Compile Include="DialogForm\FormGetPort102.Designer.cs">
       <DependentUpon>FormGetPort102.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormLocalIpAdressDialog.cs">
+    <Compile Include="DialogForm\FormLocalIpAdressDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormLocalIpAdressDialog.Designer.cs">
+    <Compile Include="DialogForm\FormLocalIpAdressDialog.Designer.cs">
       <DependentUpon>FormLocalIpAdressDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormMain.cs">
+    <Compile Include="MVP\FormMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormMain.Designer.cs">
+    <Compile Include="MVP\FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormMonitor.cs">
+    <Compile Include="DialogForm\FormMonitor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormMonitor.Designer.cs">
+    <Compile Include="DialogForm\FormMonitor.Designer.cs">
       <DependentUpon>FormMonitor.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormPlcsimIpAddressDialog.cs">
+    <Compile Include="DialogForm\FormPlcsimIpAddressDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormPlcsimIpAddressDialog.Designer.cs">
+    <Compile Include="DialogForm\FormPlcsimIpAddressDialog.Designer.cs">
       <DependentUpon>FormPlcsimIpAddressDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormStationEdit.cs">
+    <Compile Include="DialogForm\FormStationEdit.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormStationEdit.Designer.cs">
+    <Compile Include="DialogForm\FormStationEdit.Designer.cs">
       <DependentUpon>FormStationEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="Ini.cs" />
-    <Compile Include="FormInfoDialog.cs">
+    <Compile Include="MVP\Ini.cs" />
+    <Compile Include="DialogForm\FormInfoDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormInfoDialog.Designer.cs">
+    <Compile Include="DialogForm\FormInfoDialog.Designer.cs">
       <DependentUpon>FormInfoDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="IsoToS7online\ByteConvert.cs" />
@@ -143,30 +146,31 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="IsoToS7online\S7ProtoHook.cs" />
+    <Compile Include="MVP\Model\MainModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StationData.cs" />
-    <Compile Include="StationStatus.cs" />
-    <Compile Include="Tools.cs" />
-    <EmbeddedResource Include="FormGetPort102.resx">
+    <Compile Include="MVP\Model\StationData.cs" />
+    <Compile Include="MVP\Model\StationStatus.cs" />
+    <Compile Include="MVP\Tools.cs" />
+    <EmbeddedResource Include="DialogForm\FormGetPort102.resx">
       <DependentUpon>FormGetPort102.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormLocalIpAdressDialog.resx">
+    <EmbeddedResource Include="DialogForm\FormLocalIpAdressDialog.resx">
       <DependentUpon>FormLocalIpAdressDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormMain.resx">
+    <EmbeddedResource Include="MVP\FormMain.resx">
       <DependentUpon>FormMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormMonitor.resx">
+    <EmbeddedResource Include="DialogForm\FormMonitor.resx">
       <DependentUpon>FormMonitor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormPlcsimIpAddressDialog.resx">
+    <EmbeddedResource Include="DialogForm\FormPlcsimIpAddressDialog.resx">
       <DependentUpon>FormPlcsimIpAddressDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormStationEdit.resx">
+    <EmbeddedResource Include="DialogForm\FormStationEdit.resx">
       <DependentUpon>FormStationEdit.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormInfoDialog.resx">
+    <EmbeddedResource Include="DialogForm\FormInfoDialog.resx">
       <DependentUpon>FormInfoDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -196,14 +200,7 @@
       <Link>s7onlinx.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Custard Mite of Glut.ico" />
-    <Content Include="Danger Mouse In A Pickle.ico" />
-    <Content Include="nettoplcsim_icon.ico" />
-    <Content Include="sandals.ico" />
-    <Content Include="Skeleton.ico" />
-    <Content Include="starfish.ico" />
-    <Content Include="timg.ico" />
-    <Content Include="Zombie.ico" />
+    <None Include="sandals.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

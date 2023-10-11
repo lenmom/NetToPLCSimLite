@@ -38,6 +38,8 @@ namespace PLCSimConnector
         private string m_IEPGhelperServiceName = string.Empty;
         private bool m_S7DOSServiceStopped;
 
+        private FormMainPresenter m_FormMainPresenter;
+
         #endregion
 
         #region Constructor

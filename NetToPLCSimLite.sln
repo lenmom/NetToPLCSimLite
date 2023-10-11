@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IsoToS7online", "IsoOnTcpSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PLCSimConnector", "NetToPLCSim\PLCSimConnector.csproj", "{31083F11-4753-4237-9121-6EB2FA9B9AEA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "msmon", "msmon\msmon.csproj", "{9A9E3500-8773-463E-AB61-9C11E5800F25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,18 @@ Global
 		{31083F11-4753-4237-9121-6EB2FA9B9AEA}.Release|x64.Build.0 = Release|x86
 		{31083F11-4753-4237-9121-6EB2FA9B9AEA}.Release|x86.ActiveCfg = Release|x86
 		{31083F11-4753-4237-9121-6EB2FA9B9AEA}.Release|x86.Build.0 = Release|x86
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Debug|x64.Build.0 = Debug|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Debug|x86.Build.0 = Debug|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Release|x64.ActiveCfg = Release|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Release|x64.Build.0 = Release|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Release|x86.ActiveCfg = Release|Any CPU
+		{9A9E3500-8773-463E-AB61-9C11E5800F25}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

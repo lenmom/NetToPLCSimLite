@@ -16,8 +16,11 @@ namespace PLCSimConnector
     public enum StationStatus
     {
         READY,
+
         STOPPED,
+
         RUNNING,
+
         ERROR
     }
 }

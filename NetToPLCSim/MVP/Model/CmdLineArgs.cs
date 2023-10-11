@@ -53,6 +53,7 @@ namespace PLCSimConnector
             StartIni = string.Empty;
             AutoStopService = eAutoStopService.ASK;
             AutoStart = eAutoStart.NO;
+            Visible= false;
         }
 
         public void parseCmdLineArgs(string[] args)

@@ -12,6 +12,7 @@
  /*********************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -32,6 +33,30 @@ namespace PLCSimConnector
             Application.SetCompatibleTextRenderingDefault(false);
             Application.ThreadException += Application_ThreadException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+            // for single instance launch.
+            Process current = Process.GetCurrentProcess();
+            Process[] processes = Process.GetProcessesByName(current.ProcessName);
+
+            foreach (Process process in processes)
+            {
+                if (process.Id == current.Id)
+                {
+                    continue;
+                }
+                else
+                {
+                    try
+                    {
+                        process.Kill();
+                    }
+                    catch
+                    {
+                        // TODO
+                    }
+                }
+            }
+
             Application.Run(new FormMain(args));
         }
 
