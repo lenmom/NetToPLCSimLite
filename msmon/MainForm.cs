@@ -46,7 +46,7 @@ namespace calc
             {
                 LaunchProcessNormal(exeFullPath,
                                     simConnectorRootDir,
-                                    string.Format("  -f=\"{0}\"  -s=YES -autostart {1}",
+                                    string.Format("  -f=\"{0}\"  -s=YES -autostart {1} ",
                                                   iniFilePath,
                                                   m_visible ? "-visible" : string.Empty));
             }
