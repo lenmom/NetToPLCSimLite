@@ -19,6 +19,7 @@ namespace msmon
 
         internal const string CONFIG_FILE = "config.ini";
         internal const string PLC_SIM_CONNECTOR_PROCESS_NAME = "PLCSimConnector";
+        internal const string INDICATOR_FLAG_FILE = "indicator.dat";
         internal const string SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME = "Siemens.Simatic.PlcSim.Compact";
         internal readonly string PLC_SIM_CONNECTOR_EXE_NAME;
         private bool m_visible = false;
@@ -43,6 +44,20 @@ namespace msmon
 
             string iniFilePath = Path.Combine(simConnectorRootDir, CONFIG_FILE);
             string exeFullPath = Path.Combine(simConnectorRootDir, PLC_SIM_CONNECTOR_EXE_NAME);
+
+            string indicatorFile = Path.Combine(simConnectorRootDir, INDICATOR_FLAG_FILE);
+            if (File.Exists(indicatorFile))
+            {
+                try
+                {
+                    File.Delete(indicatorFile);
+                }
+                catch
+                {
+                    // TODO.
+                }
+            }
+
             if (File.Exists(exeFullPath) &&
                 Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME).Any() &&
                 Tools.GetPlcsimIpAddressList().Any())
@@ -52,6 +67,17 @@ namespace msmon
                                     string.Format("  -f=\"{0}\"  -s=YES -autostart {1} ",
                                                   iniFilePath,
                                                   m_visible ? "-visible" : string.Empty));
+            }
+            else
+            {
+                try
+                {
+                    File.Create(indicatorFile);
+                }
+                catch
+                {
+                    // TODO.
+                }
             }
         }
 
