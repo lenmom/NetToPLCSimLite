@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace calc
+namespace msmon
 {
     public partial class MainForm : Form
     {
@@ -19,6 +19,7 @@ namespace calc
 
         internal const string CONFIG_FILE = "config.ini";
         internal const string PLC_SIM_CONNECTOR_PROCESS_NAME = "PLCSimConnector";
+        internal const string SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME = "Siemens.Simatic.PlcSim.Compact";
         internal readonly string PLC_SIM_CONNECTOR_EXE_NAME;
         private bool m_visible = false;
 
@@ -42,7 +43,9 @@ namespace calc
 
             string iniFilePath = Path.Combine(simConnectorRootDir, CONFIG_FILE);
             string exeFullPath = Path.Combine(simConnectorRootDir, PLC_SIM_CONNECTOR_EXE_NAME);
-            if (File.Exists(exeFullPath))
+            if (File.Exists(exeFullPath) &&
+                Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME).Any() &&
+                Tools.GetPlcsimIpAddressList().Any())
             {
                 LaunchProcessNormal(exeFullPath,
                                     simConnectorRootDir,
@@ -60,6 +63,11 @@ namespace calc
         /// <param name="arguments"></param>
         private void LaunchProcessNormal(string exeFullPath, string workDir, string arguments)
         {
+            if (!File.Exists(exeFullPath))
+            {
+                return;
+            }
+
             Process processToLaunch = new Process();
             processToLaunch.StartInfo.FileName = exeFullPath;
             processToLaunch.StartInfo.WorkingDirectory = workDir;

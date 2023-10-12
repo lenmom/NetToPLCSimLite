@@ -1,5 +1,5 @@
 ﻿
-namespace calc
+namespace msmon
 {
     partial class MainForm
     {

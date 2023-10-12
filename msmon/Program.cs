@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace calc
+namespace msmon
 {
     static class Program
     {
@@ -41,7 +41,7 @@ namespace calc
                 }
             }
 
-            Application.Run(new MainForm((args == null || args.Length == 0) ? false : true));
+            Application.Run(new MainForm(args != null && args.Length > 0));
         }
     }
 }
