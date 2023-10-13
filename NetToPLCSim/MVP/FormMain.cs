@@ -32,6 +32,8 @@ namespace PLCSimConnector
         private readonly Config m_Conf = new Config();
         private readonly List<IsoToS7online> m_servers = new List<IsoToS7online>();
 
+        private readonly bool enableManagementUI = false;
+
         private readonly CmdLineArgs startArgs = new CmdLineArgs();
 
         private string m_ConfigName = "";
@@ -47,6 +49,10 @@ namespace PLCSimConnector
         public FormMain(string[] args)
         {
             InitializeComponent();
+            EnableUIElement(enableManagementUI);
+            this.MaximizeBox=false;
+            this.FormBorderStyle= FormBorderStyle.FixedSingle;
+
             if (args == null || args.Length < 1)
             {
                 Application.Exit();
@@ -801,6 +807,30 @@ namespace PLCSimConnector
                 deleteToolStripMenuItem.Enabled = enable;
                 modifyToolStripMenuItem.Enabled = enable;
             }
+        }
+
+        private void EnableUIElement(bool enable)
+        {
+            fileToolStripMenuItem.Visible = enable;
+            openToolStripMenuItem.Visible = enable;
+            saveToolStripMenuItem.Visible = enable;
+            saveAsToolStripMenuItem.Visible = enable;
+            exitToolStripMenuItem.Visible = enable;
+
+            toolsToolStripMenuItem.Visible = enable;
+            stopS7DOSHelperServiceToolStripMenuItem.Visible = enable;
+            startS7DOSHelperServiceToolStripMenuItem.Visible = enable;
+            getPort102ToolStripMenuItem.Visible = enable;
+
+            helpToolStripMenuItem.Visible=enable;
+            manualdeToolStripMenuItem.Visible = enable;
+            manualenToolStripMenuItem.Visible = enable;
+            infoToolStripMenuItem1.Visible = enable;
+
+            btnAdd.Visible = enable;
+            btnDelete.Visible = enable;
+
+            menuStrip1.Visible = enable;
         }
 
         #endregion
