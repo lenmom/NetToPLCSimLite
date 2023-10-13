@@ -16,7 +16,7 @@ using System.Windows.Forms;
 
 namespace PLCSimConnector
 {
-    public partial class FormInfoDialog : Form
+    internal partial class FormInfoDialog : Form
     {
         public FormInfoDialog()
         {

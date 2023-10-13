@@ -18,7 +18,7 @@ using System.Windows.Forms;
 
 namespace PLCSimConnector
 {
-    public partial class FormStationEdit : Form
+    internal partial class FormStationEdit : Form
     {
         public StationData Station = new StationData();
 

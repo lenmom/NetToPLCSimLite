@@ -23,7 +23,7 @@ using TcpLib;
 
 namespace IsoOnTcp
 {
-    public class IsoToS7online : IDisposable
+    internal class IsoToS7online : IDisposable
     {
         #region Field
 

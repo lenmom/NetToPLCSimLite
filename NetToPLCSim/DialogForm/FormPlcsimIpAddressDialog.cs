@@ -18,7 +18,7 @@ using System.Windows.Forms;
 
 namespace PLCSimConnector
 {
-    public partial class FormPlcsimIpAddressDialog : Form
+    internal partial class FormPlcsimIpAddressDialog : Form
     {
         public FormPlcsimIpAddressDialog()
         {

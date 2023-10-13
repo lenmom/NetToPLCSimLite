@@ -20,7 +20,7 @@ using IsoOnTcp;
 
 namespace PLCSimConnector
 {
-    public partial class FormMonitor : Form
+    internal partial class FormMonitor : Form
     {
         public delegate void OnDataReceived_callback(string sourceIP, byte[] data, string message);
 

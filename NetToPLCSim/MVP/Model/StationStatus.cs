@@ -13,7 +13,7 @@
 
 namespace PLCSimConnector
 {
-    public enum StationStatus
+    internal enum StationStatus
     {
         READY,
 

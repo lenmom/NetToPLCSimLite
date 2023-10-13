@@ -17,14 +17,14 @@ using System.Windows.Forms;
 
 namespace PLCSimConnector
 {
-    public enum eAutoStopService
+    internal enum eAutoStopService
     {
         YES,
         NO,
         ASK
     }
 
-    public enum eAutoStart
+    internal enum eAutoStart
     {
         YES,
         NO

@@ -16,7 +16,7 @@ using System.Net;
 
 namespace PLCSimConnector
 {
-    public class StationData : INotifyPropertyChanged
+    internal class StationData : INotifyPropertyChanged
     {
         private bool m_Connected;
         private string m_Name;

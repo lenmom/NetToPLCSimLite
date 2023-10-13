@@ -21,7 +21,7 @@ using System.Windows.Forms;
 
 namespace PLCSimConnector
 {
-    public partial class FormGetPort102 : Form
+    internal partial class FormGetPort102 : Form
     {
         private readonly string m_Servicename;
         private TcpListener m_Listener;

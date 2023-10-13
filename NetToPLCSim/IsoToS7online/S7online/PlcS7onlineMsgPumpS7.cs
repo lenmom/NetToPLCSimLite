@@ -18,7 +18,7 @@ using System.Windows.Forms;
 
 namespace IsoOnTcp.PlcsimS7online
 {
-    public class PlcS7onlineMsgPumpS7 : PlcS7onlineMsgPump
+    internal class PlcS7onlineMsgPumpS7 : PlcS7onlineMsgPump
     {
         #region Field
 

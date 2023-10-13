@@ -17,7 +17,7 @@ using System.Text;
 
 namespace Ini
 {
-    public class IniFile
+    internal class IniFile
     {
         public string path;
 
@@ -26,10 +26,10 @@ namespace Ini
             path = INIPath;
         }
 
-        [DllImport("kernel32", EntryPoint = "WritePrivateProfileString")]
+        [DllImport("kernel32")]
         private static extern long WritePrivateProfileString(string section, string key, string val, string filePath);
 
-        [DllImport("kernel32", EntryPoint = "GetPrivateProfileString")]
+        [DllImport("kernel32")]
         private static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retVal, int size, string filePath);
 
         public void DeleteFileIfExists()

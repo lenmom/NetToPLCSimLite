@@ -25,7 +25,7 @@ using IsoOnTcp;
 
 namespace PLCSimConnector
 {
-    public partial class FormMain : Form
+    internal partial class FormMain : Form
     {
         #region Field
 
@@ -831,6 +831,9 @@ namespace PLCSimConnector
             btnDelete.Visible = enable;
 
             menuStrip1.Visible = enable;
+
+            addToolStripMenuItem.Visible =enable;
+            deleteToolStripMenuItem.Visible = enable;
         }
 
         #endregion

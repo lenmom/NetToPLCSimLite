@@ -20,7 +20,7 @@ using TimeoutException = System.ServiceProcess.TimeoutException;
 
 namespace PLCSimConnector
 {
-    public class Tools
+    internal class Tools
     {
         public static bool StopService(string serviceName, int timeoutMilliseconds, bool dontShowMessageBoxes)
         {
