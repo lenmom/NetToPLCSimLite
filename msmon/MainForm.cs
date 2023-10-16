@@ -20,7 +20,20 @@ namespace msmon
         internal const string CONFIG_FILE = "config.ini";
         internal const string PLC_SIM_CONNECTOR_PROCESS_NAME = "PLCSimConnector";
         internal const string INDICATOR_FLAG_FILE = "indicator.dat";
+
+
+        /// <summary>
+        /// PLCSim v15 & v16 process name.
+        /// </summary>
         internal const string SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME = "Siemens.Simatic.PlcSim.Compact";
+
+        /// <summary>
+        /// /// <summary>
+        /// PLCSim v18 process name.
+        /// </summary>
+        /// </summary>
+        internal const string SIEMENS_SIMATIC_PLCSIM_V18_PROCESS_NAME = "S7-PLCSIM";
+
         internal readonly string PLC_SIM_CONNECTOR_EXE_NAME;
         private bool m_visible = false;
 
@@ -59,7 +72,8 @@ namespace msmon
             }
 
             if (File.Exists(exeFullPath) &&
-                Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME).Any() &&
+                (Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME).Any() ||
+                 Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_V18_PROCESS_NAME).Any()) &&
                 Tools.GetPlcsimIpAddressList().Any())
             {
                 LaunchProcessNormal(exeFullPath,
