@@ -29,6 +29,13 @@ namespace msmon
 
         /// <summary>
         /// /// <summary>
+        /// PLCSimAdvance v3.0  process name.
+        /// </summary>
+        /// </summary>
+        internal const string SIEMENS_SIMATIC_PLCSIM_ADVANCE_V30_PROCESS_NAME = "Siemens.Simatic.PlcSim.Advanced.UserInterface";
+
+        /// <summary>
+        /// /// <summary>
         /// PLCSim v18 process name.
         /// </summary>
         /// </summary>
@@ -73,7 +80,8 @@ namespace msmon
 
             if (File.Exists(exeFullPath) &&
                 (Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME).Any() ||
-                 Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_V18_PROCESS_NAME).Any()) &&
+                Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_V18_PROCESS_NAME).Any() ||
+                Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_ADVANCE_V30_PROCESS_NAME).Any()) &&
                 Tools.GetPlcsimIpAddressList().Any())
             {
                 LaunchProcessNormal(exeFullPath,
