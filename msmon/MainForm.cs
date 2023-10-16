@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace msmon
 {
-    public partial class MainForm : Form
+    internal partial class MainForm : Form
     {
         private readonly string simConnectorRootDir;
 
