@@ -734,7 +734,10 @@ namespace PLCSimConnector
                 }
                 else
                 {
-                    MessageBox.Show("Error in station-configuration ini-file in section '" + section + "'", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (startArgs.Visible)
+                    {
+                        MessageBox.Show("Error in station-configuration ini-file in section '" + section + "'", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                     readOk = false;
                 }
 
