@@ -94,14 +94,15 @@ namespace msmon
                     result.Add(p);
                 }
 
-                //if (n == 0)
-                //{
-                //    MessageBox.Show("No TCP/IP reachable PLC detected." + Environment.NewLine +
-                //                    "Please check if Plcsim is running.", "Info", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
-                //    ChosenIPaddress = "";
-                //    DialogResult = DialogResult.Cancel;
-                //    Close();
-                //}
+                if (n == 0)
+                {
+                    //MessageBox.Show("No TCP/IP reachable PLC detected." + Environment.NewLine +
+                    //                "Please check if Plcsim is running.", "Info", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+                    //ChosenIPaddress = "";
+                    //DialogResult = DialogResult.Cancel;
+                    //Close();
+                    LoggerManager.Error("No TCP/IP reachable PLC detected.");
+                }
             }
             catch
             {
@@ -109,6 +110,8 @@ namespace msmon
                 //ChosenIPaddress = "";
                 //DialogResult = DialogResult.Cancel;
                 //Close();
+
+                LoggerManager.Error("Error when connecting S7online interface");
             }
             finally
             {

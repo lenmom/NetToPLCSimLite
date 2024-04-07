@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
 namespace msmon
 {
     internal partial class MainForm : Form
@@ -47,6 +48,7 @@ namespace msmon
         public MainForm(bool visible)
         {
             InitializeComponent();
+            LoggerManager.SetLogHelper(new Log4NetHelper(string.Empty));
             PLC_SIM_CONNECTOR_EXE_NAME = string.Format("{0}.exe", PLC_SIM_CONNECTOR_PROCESS_NAME);
             simConnectorRootDir = new System.IO.FileInfo(Assembly.GetExecutingAssembly().Location).Directory.FullName;
             this.m_visible = visible;
@@ -78,10 +80,17 @@ namespace msmon
                 }
             }
 
+            bool tiaPlcSimExists = Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME).Any() ||
+                                   Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_V18_PROCESS_NAME).Any() ||
+                                   Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_ADVANCE_V30_PROCESS_NAME).Any();
+
+            if (!tiaPlcSimExists)
+            {
+                LoggerManager.Error("TIA plc sim not launched.");
+            }
+
             if (File.Exists(exeFullPath) &&
-                (Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME).Any() ||
-                Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_V18_PROCESS_NAME).Any() ||
-                Process.GetProcessesByName(SIEMENS_SIMATIC_PLCSIM_ADVANCE_V30_PROCESS_NAME).Any()) &&
+                tiaPlcSimExists &&
                 Tools.GetPlcsimIpAddressList().Any())
             {
                 LaunchProcessNormal(exeFullPath,
@@ -100,6 +109,8 @@ namespace msmon
                 {
                     // TODO.
                 }
+
+                Application.Exit();
             }
         }
 
@@ -116,6 +127,8 @@ namespace msmon
                 return;
             }
 
+            LoggerManager.Info(arguments);
+
             Process processToLaunch = new Process();
             processToLaunch.StartInfo.FileName = exeFullPath;
             processToLaunch.StartInfo.WorkingDirectory = workDir;
@@ -131,9 +144,11 @@ namespace msmon
                 processToLaunch.Start();
                 //logger.Info(processToLaunch.StandardOutput.ReadToEnd());
             }
-            catch (Exception)
+            catch (Exception error)
             {
-                // TODO
+                LoggerManager.Error(error.Message);
+                EnsureSimConnectorClosed();
+                Application.Exit();
             }
         }
 
