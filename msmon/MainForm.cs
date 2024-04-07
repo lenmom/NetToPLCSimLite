@@ -89,9 +89,15 @@ namespace msmon
                 LoggerManager.Error("TIA plc sim not launched.");
             }
 
+            bool plcSimIpAddessExists = Tools.GetPlcsimIpAddressList().Any();
+            if (!plcSimIpAddessExists)
+            {
+                LoggerManager.Error("No TCP/IP reachable PLC detected.");
+            }
+
             if (File.Exists(exeFullPath) &&
                 tiaPlcSimExists &&
-                Tools.GetPlcsimIpAddressList().Any())
+                plcSimIpAddessExists)
             {
                 LaunchProcessNormal(exeFullPath,
                                     simConnectorRootDir,
