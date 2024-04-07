@@ -46,7 +46,7 @@ namespace PLCSimConnector
 
         #region Constructor
 
-        public FormMain(string[] args)
+        internal FormMain(string[] args)
         {
             InitializeComponent();
             EnableUIElement(enableManagementUI);

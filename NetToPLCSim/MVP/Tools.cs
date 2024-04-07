@@ -22,7 +22,7 @@ namespace PLCSimConnector
 {
     internal class Tools
     {
-        public static bool StopService(string serviceName, int timeoutMilliseconds, bool dontShowMessageBoxes)
+        internal static bool StopService(string serviceName, int timeoutMilliseconds, bool dontShowMessageBoxes)
         {
             ServiceController service = new ServiceController(serviceName);
             bool retry = false;
@@ -71,7 +71,7 @@ namespace PLCSimConnector
             return service.Status == ServiceControllerStatus.Stopped;
         }
 
-        public static bool StartService(string serviceName, int timeoutMilliseconds, bool dontShowMessageBoxes, bool restartIfRunning)
+        internal static bool StartService(string serviceName, int timeoutMilliseconds, bool dontShowMessageBoxes, bool restartIfRunning)
         {
             ServiceController service = new ServiceController(serviceName);
             bool retry = false;
@@ -166,7 +166,7 @@ namespace PLCSimConnector
         ///     s7oiehsx on 32 Bit an s7oiehsx64 on 64 Bit
         /// </summary>
         /// <returns>The Service name of the  S7DOS-Service, or Empty if could not be determined.</returns>
-        public static string GetS7DOSHelperServiceName()
+        internal static string GetS7DOSHelperServiceName()
         {
             string machineName = "."; // local
             ServiceController[] services = null;
@@ -194,7 +194,7 @@ namespace PLCSimConnector
             return string.Empty;
         }
 
-        public static bool IsTcpPortAvailable(int port)
+        internal static bool IsTcpPortAvailable(int port)
         {
             bool isAvailable = true;
 

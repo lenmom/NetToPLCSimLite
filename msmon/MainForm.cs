@@ -23,7 +23,7 @@ namespace msmon
 
 
         /// <summary>
-        /// PLCSim v15 & v16 & v17 process name.
+        /// PLCSim v15/v16/v17 process name.
         /// </summary>
         internal const string SIEMENS_SIMATIC_PLCSIM_COMPACT_PROCESS_NAME = "Siemens.Simatic.PlcSim.Compact";
 

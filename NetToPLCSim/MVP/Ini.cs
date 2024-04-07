@@ -19,9 +19,9 @@ namespace Ini
 {
     internal class IniFile
     {
-        public string path;
+        internal string path;
 
-        public IniFile(string INIPath)
+        internal IniFile(string INIPath)
         {
             path = INIPath;
         }
@@ -32,7 +32,7 @@ namespace Ini
         [DllImport("kernel32")]
         private static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retVal, int size, string filePath);
 
-        public void DeleteFileIfExists()
+        internal void DeleteFileIfExists()
         {
             if (File.Exists(path))
             {
@@ -40,12 +40,12 @@ namespace Ini
             }
         }
 
-        public void IniWriteValue(string Section, string Key, string Value)
+        internal void IniWriteValue(string Section, string Key, string Value)
         {
             WritePrivateProfileString(Section, Key, Value, path);
         }
 
-        public string IniReadValue(string Section, string Key)
+        internal string IniReadValue(string Section, string Key)
         {
             StringBuilder temp = new StringBuilder(255);
             int i = GetPrivateProfileString(Section, Key, "", temp, 255, path);
