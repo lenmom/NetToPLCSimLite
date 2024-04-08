@@ -101,7 +101,7 @@ namespace msmon
                     //ChosenIPaddress = "";
                     //DialogResult = DialogResult.Cancel;
                     //Close();
-                    LoggerManager.Error("No TCP/IP reachable PLC detected.");
+                    //LoggerManager.Error("No TCP/IP reachable PLC detected.");
                 }
             }
             catch
