@@ -48,6 +48,7 @@ namespace PLCSimConnector
 
         internal FormMain(string[] args)
         {
+            LoggerManager.SetLogHelper(new Log4NetHelper(string.Empty));
             InitializeComponent();
             EnableUIElement(enableManagementUI);
             this.MaximizeBox=false;
