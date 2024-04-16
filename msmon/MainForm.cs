@@ -87,6 +87,7 @@ namespace msmon
             if (!tiaPlcSimExists)
             {
                 LoggerManager.Error("TIA plc sim not launched.");
+                Application.Exit();
             }
 
             bool plcSimIpAddessExists = Tools.GetPlcsimIpAddressList().Any();
@@ -96,8 +97,7 @@ namespace msmon
             }
 
             if (File.Exists(exeFullPath) &&
-                tiaPlcSimExists &&
-                plcSimIpAddessExists)
+                tiaPlcSimExists)
             {
                 LaunchProcessNormal(exeFullPath,
                                     simConnectorRootDir,
